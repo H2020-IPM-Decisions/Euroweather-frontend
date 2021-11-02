@@ -1,0 +1,5 @@
+#!/bin/bash
+# Usage: source init_flask_dev
+export FLASK_APP=app.py
+export FLASK_ENV=development
+source venv/bin/activate

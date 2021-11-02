@@ -1,0 +1,7 @@
+venv/
+.vscode/
+.project
+.pydevproject
+__pycache__/
+europe-seasondata.ini
+europe-seasondata.code-workspace

@@ -1,0 +1,6 @@
+Flask
+psycopg2-binary
+postgis
+shapely
+pyproj
+numpy
