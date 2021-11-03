@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy
 import json
 import os,sys
+from pickle import FALSE
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models import WeatherDataTicket, Site, WeatherData, LocationWeatherData
 from db_pool import DBPool
@@ -89,12 +90,25 @@ def import_data(coms_path, site_id) -> bool:
         # Sort the buckets by reference time first
         refs_ordered = list(ref_buckets.keys())
         refs_ordered.sort()
+        very_first = True
         for ref in refs_ordered:
             #print(ref)
             ref_bucket = ref_buckets[ref]
+            # Assuming that ref_bucket was sorted in step 2, we don't do it again
+            first = True
             for time_paramdict in ref_bucket:
                 row_index = int((time_paramdict["time"] - first_epoch_total) / interval)
                 if time_paramdict["time"] > ref_periods[time_paramdict["ref"]][1]:
+                    continue
+                # If it's the first value in this bucket, we skip it, since
+                # the first value in each model run is considered a spin up value
+                # ASSUMPTION: the bucket is sorted!!
+                # Exception: The VERY FIRST time_paramdict in the very first bucket (Since we have nothing to overwrite it with)
+                if very_first:
+                    very_first = False
+                    first = False
+                if first:
+                    first = False
                     continue
                 for idx, parameter in enumerate(parameters):
                     strval = time_paramdict.get(param_mapping[parameter], None)
@@ -113,7 +127,7 @@ def import_data(coms_path, site_id) -> bool:
                         print(ex)
                         print("data length=%s,row_index=%s,time=%s"%(len(data),row_index,datetime.utcfromtimestamp(time_paramdict["time"]).isoformat()))
                         exit(0)
-                previous_time = time_paramdict["time"]
+                #previous_time = time_paramdict["time"]
                 #print("%sZ: %s" % (datetime.utcfromtimestamp(time_paramdict["time"]).isoformat(), time_paramdict["rr"]))
         
         
@@ -177,5 +191,7 @@ for ticket in controller.get_all_tickets():
             else:
                 # Thanks for the data. We need more!
                 create_req_file(coms_path, ticket)
+    # TODO Delete orphan req files (no ticket)
+    # TODO What about orphan res files? Shold be imported?
 
 
