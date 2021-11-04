@@ -164,9 +164,11 @@ config = configparser.ConfigParser()
 config.read(SITE_ROOT + "/../europe-seasondata.ini")
 controller = Controller(config)
 
-coms_path = config["backend"]["coms_path"]
+coms_init_path = config["backend"]["coms_init_path"]
+coms_update_path = config["backend"]["coms_update_path"]
 # Iterate all tickets
 for ticket in controller.get_all_tickets():
+    coms_path = coms_init_path if ticket.ticket_type_id == WeatherDataTicket.TICKET_TYPE_INIT else coms_update_path
     req_path = "%s/%s.req" % (coms_path, ticket.site_id)
     res_path = "%s/%s.res" % (coms_path, ticket.site_id)
     if not controller.is_ticket_valid(ticket):
