@@ -79,4 +79,27 @@ Example using Ubuntu
 ``` bash
 sudo apt-get install --assume-yes postgresql apache2
 ```
+### Initialize the database (tested in Ubuntu)
+The files for initializing the database are found in this repo's `ddl/` folder
+As user postgres, using psql or pgAdmin4:
 
+```sql
+-- Create db owner
+CREATE USER europe_season_adm WITH PASSWORD '*** YOUR PASSWORD GOES HERE***';
+
+-- Create db
+-- as postgres
+CREATE DATABASE europe_season 
+    WITH 
+    OWNER = europe_season_adm
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'en_US.UTF-8'
+    LC_CTYPE = 'en_US.UTF-8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+```
+
+Then, log in as europe_season_adm and run the rest of ddl_001.sql
+
+### Installing the app
+git clone, venv etc
