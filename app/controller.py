@@ -206,7 +206,7 @@ class Controller:
             return weather_data
         conn.close()
 
-    def get_weather_data_by_location(self, longitude, latitude, parameters):
+    def get_weather_data_by_location(self, longitude, latitude, parameters) -> WeatherData:
         # Check if we have a site close enough
         conn = self.db.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
@@ -235,13 +235,21 @@ class Controller:
         ticket = None
         if weather_data is None or len(weather_data.locationWeatherData[0].data) == 0:
             ticket = self.create_ticket(site["site_id"], WeatherDataTicket.TICKET_TYPE_INIT)
-        elif not self.is_weather_data_up_to_date(weather_data):
-            ticket = self.create_ticket(site["site_id"], WeatherDataTicket.TICKET_TYPE_UPDATE)
         if ticket is None:
             return weather_data
         else:
             return "DATA IS NOT AVAILABLE. Please check in later"
 
+    def get_all_sites(self):
+        conn = self.db.get_conn()
+        all_sites = []
+        with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM site")
+            for res in cur.fetchall():
+                all_sites.append(Site(site_id=res["site_id"],location=res["location"]))
+        conn.close()
+        return all_sites
+    
     def get_site(self, site_id) -> Site:
         conn = self.db.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:

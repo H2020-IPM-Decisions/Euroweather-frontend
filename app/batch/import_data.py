@@ -146,8 +146,7 @@ def import_data(coms_path, site_id) -> bool:
 
 
 
-def create_req_file(coms_path: str, ticket: WeatherDataTicket):
-    site = controller.get_site(ticket.site_id)
+def create_req_file(coms_path: str, site: Site):
     with open("%s/%s.req" % (coms_path, site.site_id),"w") as req_file:
         req_file.write("%s %s" % (site.location.y, site.location.x))
 
@@ -158,6 +157,7 @@ def create_req_file(coms_path: str, ticket: WeatherDataTicket):
 
 import configparser
 from controller import Controller
+from glob import glob
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 config = configparser.ConfigParser()
@@ -166,9 +166,11 @@ controller = Controller(config)
 
 coms_init_path = config["backend"]["coms_init_path"]
 coms_update_path = config["backend"]["coms_update_path"]
-# Iterate all tickets
+
+# INIT jobs (load data from the beginning of the season)
+# Iterate all tickets (INIT JOBS)
 for ticket in controller.get_all_tickets():
-    coms_path = coms_init_path if ticket.ticket_type_id == WeatherDataTicket.TICKET_TYPE_INIT else coms_update_path
+    coms_path = coms_init_path# if ticket.ticket_type_id == WeatherDataTicket.TICKET_TYPE_INIT else coms_update_path
     req_path = "%s/%s.req" % (coms_path, ticket.site_id)
     res_path = "%s/%s.res" % (coms_path, ticket.site_id)
     if not controller.is_ticket_valid(ticket):
@@ -184,16 +186,25 @@ for ticket in controller.get_all_tickets():
         continue
     # b. No req file, no res file => Create req file
     if not os.path.isfile(req_path) and not os.path.isfile(res_path):
-        create_req_file(coms_path, ticket)
+        create_req_file(coms_path, controller.get_site(ticket.site_id))
     # c. No req file, res file present => import
     if not os.path.isfile(req_path) and os.path.isfile(res_path):
-        if import_data(coms_path, ticket.site_id):
-            if controller.is_weather_data_up_to_date(controller.get_weather_data_by_site(ticket.site_id)):
-                controller.delete_ticket(ticket)
-            else:
-                # Thanks for the data. We need more!
-                create_req_file(coms_path, ticket)
-    # TODO Delete orphan req files (no ticket)
-    # TODO What about orphan res files? Shold be imported?
+        # TODO Check if this still makes sense (when all sites are updated)
+        if not import_data(coms_path, ticket.site_id):
+            create_req_file(coms_path, controller.get_site(ticket.site_id))
 
+# Import Orphan INIT res files
+res_files = glob("%s/*.res" % coms_init_path)
+for res_file in res_files:
+    import_data(coms_init_path, int(res_file.split[0]))
+
+# UPDATE JOBS (Load the most recent data)
+# All sites need to be updated
+# 1. Check for any .res files in /coms_update folder -  import that data
+res_files = glob("%s/*.res" % coms_update_path)
+for res_file in res_files:
+    import_data(coms_update_path, int(res_file.split[0]))
+# 2. Create .req files for all sites in the /coms_update folder
+for site in controller.get_all_sites():
+    create_req_file(coms_update_path, site)
 
