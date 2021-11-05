@@ -48,12 +48,4 @@ CREATE TABLE weather_data(
 
 ALTER TABLE IF EXISTS public.weather_data
     OWNER to europe_season_adm;
-    
-CREATE TABLE weather_data_ticket(
-	site_id integer REFERENCES public.site(site_id) PRIMARY KEY,
-	ticket_time timestamp with time zone,
-	ticket_type_id integer -- 1 = init, 2 = update
-);
 
-ALTER TABLE IF EXISTS public.weather_data_ticket
-    OWNER to europe_season_adm;

@@ -13,7 +13,7 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from models import WeatherData, LocationWeatherData, WeatherDataTicket, Site
+from models import WeatherData, LocationWeatherData, Site
 from custom_errors import MergeDataError
 
 from db_pool import DBPool
@@ -230,15 +230,8 @@ class Controller:
         # Get weather data
         #print("Site id=%s" % site["site_id"])
         weather_data = self.get_weather_data_by_site(site["site_id"])
-        #print(weather_data)
-        # If no or not updated data for site, check "ordering status" and return message
-        ticket = None
-        if weather_data is None or len(weather_data.locationWeatherData[0].data) == 0:
-            ticket = self.create_ticket(site["site_id"], WeatherDataTicket.TICKET_TYPE_INIT)
-        if ticket is None:
-            return weather_data
-        else:
-            return "DATA IS NOT AVAILABLE. Please check in later"
+        # If not updated data: Return message
+        return weather_data if self.is_weather_data_up_to_date(weather_data) else "DATA IS NOT AVAILABLE. Please check in later"
 
     def get_all_sites(self):
         conn = self.db.get_conn()
@@ -270,58 +263,23 @@ class Controller:
             
         conn.commit()
         conn.close()
-        # Create a ticket for loading data from beginning of the season
-        self.create_ticket(site_id, WeatherDataTicket.TICKET_TYPE_INIT)
         return site
     
+    
     def is_weather_data_up_to_date(self, weather_data:WeatherData) -> bool:
-        print(weather_data)
+        #print(weather_data)
         if weather_data is None or len(weather_data.locationWeatherData[0].data) == 0:
             return False
-        print("%s, %s" % (weather_data.timeEnd, (datetime.now() + timedelta(hours=24)).timestamp() ))
+        #print("%s, %s" % (weather_data.timeEnd, (datetime.now() + timedelta(hours=24)).timestamp() ))
         return False if weather_data.timeEnd < (datetime.now() + timedelta(hours=24)).timestamp() else True
-        
-    # ticket_type_id = [1,2]. 1 = init, 2 = update
-    # Returns new or existing ticket
-    def create_ticket(self, site_id, ticket_type_id) -> WeatherDataTicket:
-        conn = self.db.get_conn()
-        with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
-            # If ticket already exists, don't overwrite it
-            cur.execute("SELECT * from weather_data_ticket WHERE site_id=%s", (site_id,))
-            res = cur.fetchone()
-            if res is None:
-                cur.execute("INSERT INTO weather_data_ticket(site_id, ticket_time, ticket_type_id) VALUES(%s,now(),%s);",(site_id,ticket_type_id))
-                cur.execute("SELECT * from weather_data_ticket WHERE site_id=%s", (site_id,))
-                res = cur.fetchone()
-                conn.commit()
-            
-        conn.close()
-        return WeatherDataTicket(site_id=res["site_id"], ticket_time=res["ticket_time"], ticket_type_id=res["ticket_type_id"])
     
-    def delete_ticket(self, ticket:WeatherDataTicket):
+    # Criteria for data init: No weather data or data up until only 24 hours ago
+    # TODO: Make this more intelligent (check for holes etc)
+    def does_site_need_data_init(self, site_id):
         conn = self.db.get_conn()
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM weather_data_ticket WHERE site_id=%s",(ticket.site_id,))
-            conn.commit()
+            cur.execute("SELECT max(time_measured) FROM weather_data WHERE site_id=%s",(site_id,))
+            max_time = cur.fetchone()[0]
         conn.close()
-        return
+        return max_time is None or max_time.timestamp() < (datetime.now() - timedelta(hours=24)).timestamp()
     
-    def get_all_tickets(self):
-        conn = self.db.get_conn()
-        with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
-            cur.execute("SELECT * FROM weather_data_ticket")
-            all_tickets = []
-            for res in cur:
-                all_tickets.append(WeatherDataTicket(site_id=res["site_id"], ticket_time=res["ticket_time"], ticket_type_id=res["ticket_type_id"]))
-        conn.close()
-        return all_tickets
-    
-    def is_ticket_valid(self, ticket:WeatherDataTicket):
-        # FOR NOW: ALL INIT TICKETS FOR SITES WITH DATA ARE INVALID
-        # ALL UPDATE TICKETS ARE VALID
-        print(ticket)
-        if ticket.ticket_type_id == WeatherDataTicket.TICKET_TYPE_UPDATE:
-            return True
-        return not self.is_weather_data_up_to_date(self.get_weather_data_by_site(ticket.site_id))
-        
-        

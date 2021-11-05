@@ -73,18 +73,6 @@ class LocationWeatherData:
         retval = vars(self)
         # Add location weather data
         return retval 
-    
-class WeatherDataTicket:
-    # A ticket with this type will cause the backend to fetch all data from current season
-    TICKET_TYPE_INIT = 1
-    # A ticket with this type will cause the backend to fetch all new data
-    TICKET_TYPE_UPDATE = 2
-    
-    def __init__(self, *args, **kwargs):
-        self.site_id = kwargs.get("site_id", None)
-        self.ticket_time = kwargs.get("ticket_time", None)
-        self.ticket_type_id = kwargs.get("ticket_type_id", None)
-        
 
 class Site:
     def __init__(self, *args, **kwargs):

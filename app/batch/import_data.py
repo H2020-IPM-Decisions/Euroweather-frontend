@@ -6,7 +6,7 @@ import json
 import os,sys
 from pickle import FALSE
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models import WeatherDataTicket, Site, WeatherData, LocationWeatherData
+from models import Site, WeatherData, LocationWeatherData
 from db_pool import DBPool
 
 interval = 3600
@@ -168,42 +168,27 @@ coms_init_path = config["backend"]["coms_init_path"]
 coms_update_path = config["backend"]["coms_update_path"]
 
 # INIT jobs (load data from the beginning of the season)
-# Iterate all tickets (INIT JOBS)
-for ticket in controller.get_all_tickets():
-    coms_path = coms_init_path# if ticket.ticket_type_id == WeatherDataTicket.TICKET_TYPE_INIT else coms_update_path
-    req_path = "%s/%s.req" % (coms_path, ticket.site_id)
-    res_path = "%s/%s.res" % (coms_path, ticket.site_id)
-    if not controller.is_ticket_valid(ticket):
-        controller.delete_ticket(ticket)
-        if os.path.exists(req_path):
-            os.remove(req_path)
-        if os.path.exists(res_path):
-            os.remove(res_path)
-        continue
-    
-    # a. Req file present, no res file => Leave
-    if os.path.isfile(req_path) and not os.path.isfile(res_path):
-        continue
-    # b. No req file, no res file => Create req file
-    if not os.path.isfile(req_path) and not os.path.isfile(res_path):
-        create_req_file(coms_path, controller.get_site(ticket.site_id))
-    # c. No req file, res file present => import
-    if not os.path.isfile(req_path) and os.path.isfile(res_path):
-        # TODO Check if this still makes sense (when all sites are updated)
-        if not import_data(coms_path, ticket.site_id):
-            create_req_file(coms_path, controller.get_site(ticket.site_id))
+# Check which sites needs to be INITiated with data
+for site in controller.get_all_sites():
+    if controller.does_site_need_data_init(site.site_id):
+        # Are we already on it? If not: create req file
+        req_path = "%s/%s.req" % (coms_init_path, site.site_id)
+        res_path = "%s/%s.res" % (coms_init_path, site.site_id)
+        if not os.path.isfile(req_path) and not os.path.isfile(res_path):
+            create_req_file(coms_init_path, site)
+        
 
-# Import Orphan INIT res files
+# Import INIT res files
 res_files = glob("%s/*.res" % coms_init_path)
 for res_file in res_files:
-    import_data(coms_init_path, int(res_file.split[0]))
+    import_data(coms_init_path, int(os.path.basename(res_file).split(".")[0]))
 
 # UPDATE JOBS (Load the most recent data)
 # All sites need to be updated
 # 1. Check for any .res files in /coms_update folder -  import that data
 res_files = glob("%s/*.res" % coms_update_path)
 for res_file in res_files:
-    import_data(coms_update_path, int(res_file.split[0]))
+    import_data(coms_update_path, int(os.path.basename(res_file).split(".")[0]))
 # 2. Create .req files for all sites in the /coms_update folder
 for site in controller.get_all_sites():
     create_req_file(coms_update_path, site)
