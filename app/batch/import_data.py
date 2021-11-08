@@ -11,7 +11,7 @@ from db_pool import DBPool
 
 interval = 3600
 
-DEBUG = True
+DEBUG = False
 
 parameters = [
         1001, # Temperature 2m (C)
