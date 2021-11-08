@@ -1,23 +1,23 @@
 -- Create db owner
-CREATE USER europe_season_adm WITH PASSWORD '123';
+CREATE USER europe_season_adm WITH PASSWORD '*** YOUR PASSWORD GOES HERE***';
 
 -- Create db
 -- as postgres
 CREATE DATABASE europe_season 
     WITH 
     OWNER = europe_season_adm
+    TEMPLATE = template0
     ENCODING = 'UTF8'
     LC_COLLATE = 'en_US.UTF-8'
     LC_CTYPE = 'en_US.UTF-8'
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
-
--- Log in to DB as europe_season_adm and...
-
+    
 -- Add PostGIS
 CREATE EXTENSION IF NOT EXISTS postgis
     SCHEMA public
     VERSION "3.0.0";
+
     
 -- Create and populate tables
 CREATE TABLE site (
