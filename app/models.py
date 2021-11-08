@@ -22,8 +22,8 @@ from shapely.geometry import Point
 class WeatherData:
     def __init__(self, *args, **kwargs):
         # Get the times
-        self.timeStart = self.to_epoch_seconds(kwargs.get("timeStart", None))
-        self.timeEnd = self.to_epoch_seconds(kwargs.get("timeEnd", None))
+        self.timeStart = WeatherData.to_epoch_seconds(kwargs.get("timeStart", None))
+        self.timeEnd = WeatherData.to_epoch_seconds(kwargs.get("timeEnd", None))
         self.interval = kwargs.get("interval", 3600)
         self.weatherParameters = kwargs.get("weatherParameters", None)
         self.locationWeatherData = []
@@ -32,8 +32,8 @@ class WeatherData:
             for lwd in lwd_tmp:
                 self.locationWeatherData.append(LocationWeatherData(**lwd) if not isinstance(lwd, LocationWeatherData) else lwd)
          
-
-    def to_epoch_seconds(self, some_kind_of_date):
+    @classmethod
+    def to_epoch_seconds(self,some_kind_of_date):
         # Epochs and None are returned as is
         # We only try to convert strings
         try:
