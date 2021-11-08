@@ -165,7 +165,8 @@ class Controller:
             float(weather_data.locationWeatherData[0].latitude)
             ) 
 
-    def get_weather_data_by_site(self, site_id):
+    def get_weather_data_by_site(self, site_id, timeStart, timeEnd):
+        
         conn = self.db.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             cur.execute("SELECT * FROM site WHERE site_id=%s",(site_id,))
@@ -173,7 +174,7 @@ class Controller:
             if site is None:
                 conn.close()
                 return None
-            cur.execute("SELECT EXTRACT(epoch FROM wd.time_measured) AS epoch_seconds, wd.* FROM weather_data wd WHERE site_id=%s",(site_id,))
+            cur.execute("SELECT EXTRACT(epoch FROM wd.time_measured) AS epoch_seconds, wd.* FROM weather_data wd WHERE site_id=%s AND time_measured BETWEEN to_timestamp(%s) AND to_timestamp(%s)",(site_id,timeStart,timeEnd))
             # Build a dict hashed with timestamps
             # Also, build parameter list
             time_start = None
@@ -206,7 +207,7 @@ class Controller:
             return weather_data
         conn.close()
 
-    def get_weather_data_by_location(self, longitude, latitude, parameters) -> WeatherData:
+    def get_weather_data_by_location(self, longitude, latitude, parameters, timeStart, timeEnd) -> WeatherData:
         # Check if we have a site close enough
         conn = self.db.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
@@ -229,9 +230,9 @@ class Controller:
             site = self.create_site(longitude, latitude)
         # Get weather data
         #print("Site id=%s" % site["site_id"])
-        weather_data = self.get_weather_data_by_site(site["site_id"])
+        weather_data = self.get_weather_data_by_site(site["site_id"], timeStart, timeEnd)
         # If not updated data: Return message
-        return weather_data if self.is_weather_data_up_to_date(weather_data) else "DATA IS NOT AVAILABLE. Please check in later"
+        return weather_data if self.is_weather_data_up_to_date(weather_data, timeStart, timeEnd) else "DATA IS NOT AVAILABLE. Please check in later"
 
     def get_all_sites(self):
         conn = self.db.get_conn()
@@ -266,12 +267,13 @@ class Controller:
         return site
     
     
-    def is_weather_data_up_to_date(self, weather_data:WeatherData) -> bool:
+    def is_weather_data_up_to_date(self, weather_data:WeatherData, timeStart:str, timeEnd:str) -> bool:
         #print(weather_data)
         if weather_data is None or len(weather_data.locationWeatherData[0].data) == 0:
             return False
         #print("%s, %s" % (weather_data.timeEnd, (datetime.now() + timedelta(hours=24)).timestamp() ))
-        return False if weather_data.timeEnd < (datetime.now() + timedelta(hours=24)).timestamp() else True
+        
+        return False if weather_data.timeEnd < min((datetime.now() + timedelta(hours=24)).timestamp(), timeEnd) else True
     
     # Criteria for data init: No weather data or data up until only 24 hours ago
     # TODO: Make this more intelligent (check for holes etc)

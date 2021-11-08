@@ -133,7 +133,7 @@ def import_data(coms_path, site_id) -> bool:
         
         location_weather_data.data = data
         data_imported.locationWeatherData.append(location_weather_data)
-        data_from_db = controller.get_weather_data_by_site(site_id)
+        data_from_db = controller.get_weather_data_by_site(site_id, None, None)
         controller.store_weather_data_for_site(site_id, controller.merge_weather_data(data_from_db, data_imported))
         #################
         # Remove file

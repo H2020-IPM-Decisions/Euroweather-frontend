@@ -16,6 +16,7 @@
 import os
 import configparser
 
+from datetime import datetime
 from flask import Flask
 from flask import request
 from flask import render_template
@@ -46,6 +47,10 @@ def get_weather_data():
     longitude = request.args.get("longitude", None) # WGS84
     latitude = request.args.get("latitude", None) # WGS84
     parameters = request.args.get("parameters", None) # Comma separated list
+    # TODO Proper time check
+    timeStart = WeatherData.to_epoch_seconds(request.args.get("timeStart", ("%s-01-01" % datetime.now().year))) # ISO date e.g. 2021-10-22 (Oct 22 2021)
+    timeEnd = WeatherData.to_epoch_seconds(request.args.get("timeEnd", "%s-12-31" % datetime.now().year))
+    
     if longitude == None or latitude == None:
         return render_template("usage.html")
     try:
@@ -53,7 +58,7 @@ def get_weather_data():
     except ValueError as e:
         return "BAD REQUEST: Error in specified weather parameters: %s" % e, 403
     try:
-        data = controller.get_weather_data_by_location(longitude, latitude, parameters)
+        data = controller.get_weather_data_by_location(longitude, latitude, parameters,timeStart,timeEnd)
         return data if not isinstance(data, WeatherData) else data.as_dict()
     except NoDataAvailableError as e:
         return "SERVICE UNAVAILABLE: Unfortunately, there is no data available at the moment.", 503
