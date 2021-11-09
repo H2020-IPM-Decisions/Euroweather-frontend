@@ -5,3 +5,4 @@ venv/
 __pycache__/
 europe-seasondata.ini
 europe-seasondata.code-workspace
+run_import_data.sh
