@@ -52,6 +52,8 @@ kelvin_0c = 272.15
 interval = 3600 # Hourly values, always
 location_tolerance_m = 100
 
+DEBUG = False
+
 class Controller:
     def __init__(self,config):
         self.config = config
@@ -93,7 +95,8 @@ class Controller:
                         )
                     )
                     idx = idx + 1
-                    #print("inserted")
+            if DEBUG:
+                print("inserted DATA for site_id=%s" % site_id)
         conn.commit()
         conn.close()
 
@@ -204,8 +207,9 @@ class Controller:
                 timeEnd = None if time_end is None else int(time_end),
                 locationWeatherData = [lwd]
                 )
+            conn.close()
             return weather_data
-        conn.close()
+        
 
     def get_weather_data_by_location(self, longitude, latitude, parameters, timeStart, timeEnd) -> WeatherData:
         # Check if we have a site close enough
