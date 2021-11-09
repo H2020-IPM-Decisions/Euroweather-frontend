@@ -94,8 +94,8 @@ class Controller:
                     )
                     idx = idx + 1
                     #print("inserted")
-            conn.commit()
-            conn.close()
+        conn.commit()
+        conn.close()
 
     def merge_weather_data(self, original, new):
         # Times:
