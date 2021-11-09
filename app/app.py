@@ -59,7 +59,10 @@ def get_weather_data():
         return "BAD REQUEST: Error in specified weather parameters: %s" % e, 403
     try:
         data = controller.get_weather_data_by_location(longitude, latitude, parameters,timeStart,timeEnd)
-        return data if not isinstance(data, WeatherData) else data.as_dict()
+        if isinstance(data, WeatherData):
+            return data.as_dict()
+        else:
+            return "This is the first time this season that weather data has been requested for this location. Please allow 2 hours of initial processing time. After this, data will be updated and immediately ready on request.", 202
     except NoDataAvailableError as e:
         return "SERVICE UNAVAILABLE: Unfortunately, there is no data available at the moment.", 503
 
