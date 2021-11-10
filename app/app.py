@@ -20,7 +20,6 @@ from datetime import datetime
 from flask import Flask
 from flask import request
 from flask import render_template
-from flask import abort
 
 from controller import Controller
 from custom_errors import NoDataAvailableError

@@ -1,18 +1,48 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Usage</title>
+        <title>Euroweather</title>
     </head>
     <body>
+		<p><a href="https://ipmdecisions.net/" target="new"><img src="/static/images/output-onlinepngtools.png" style="width: 250px;"/></a></p>
+		<h1>Euroweather</h1>
+		<p>This service provides location based synthetic seasonal weather data for Europe. The service is 
+		based on gridded weather forecasts from Deutsche Wetterdienst which are downloaded and stored 
+		throughout the season.The data for each location is interpolated from the 7*7km grid. The parameters provided are:
+		</p>
+		<ul>
+			<li>Air temperature at 2m in &deg;C</li>
+			<li>Relative humidity at 2m in %</li>
+			<li>Wind speed at 10m in m/s</li>
+			<li>Precipitation in mm</li>
+		</ul>
+		
+		<p>When a request for a specific location is made for the first time during a season, the data 
+		from January 1st and up til the request date needs to be collected from the from the backend's 
+		rather big archive of NetCDF files. Thus, the user will not get the data immediately from the first 
+		request. These location initializations take place once or every second hour (depending on the 
+		backend server's capacity). After that, the data are cached in this service's database for 
+		quick/immediate access, and daily requests to the backend for updates ensure that the database 
+		stays up-to-date.</p>
+		
+		<p>This service is part of the <a href="https://ipmdecisions.net/" target="new">IPM Decisions platform</a></p>
+		
+		<p><img src="/static/images/map.png"/><br/><i>The area covered by the service</i></p>
+		
+		<p>&copy; 2021 <a href="https://nibio.no/en" target="new">NIBIO</a> and <a href="https://met.no/en" target="new">Met Norway</a> </p>
+
+
+
         <h1>Usage</h1>
         <p>
-            /weather_data?latitude=[]&amp;longitude=[]&amp;parameters=[,,]
+            /weather_data?latitude=[]&amp;longitude=[]&amp;parameters=[,,]&amp;timeStart=[]&amp;timeEnd=[]
         </p>
 		<ul>
-			<li>Coordinate system: WGS84 (Decimal degrees)</li>
-			<li><a href="https://raw.githubusercontent.com/H2020-IPM-Decisions/formats/master/weather_data/weather_parameters_draft_v2.yaml" target="new">Parameters list</a></li>
+			<li>latitude and longitude are mandatory parameters. Coordinate system: WGS84 (Decimal degrees)</li>
+			<li>parameters are optional <a href="https://raw.githubusercontent.com/H2020-IPM-Decisions/formats/master/weather_data/weather_parameters_draft_v2.yaml" target="new">Parameters list</a></li>
+			<li>timeStart and timeEnd are optional. Format: YYYY-mm-dd, e.g. 2021-10-28. If omitted, data starting from Jan 1st and as far as data goes will be returned</li> 
 		</ul>
 		<h2>Example</h2>
-		<p><a href="/weather_data?latitude=50.109&amp;longitude=10.961&amp;parameters=1001,2001">/weather_data?latitude=50.109&amp;longitude=10.961&amp;parameters=1001,2001</a></p>
+		<p><a href="/weather_data?latitude=50.109&amp;longitude=10.961&amp;parameters=1001,2001&timeStart=2021-10-28&timeEnd=2021-11-15">/weather_data?latitude=50.109&amp;longitude=10.961&amp;parameters=1001,2001</a></p>
     </body>
 </html>
