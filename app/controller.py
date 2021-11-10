@@ -57,7 +57,7 @@ DEBUG = False
 class Controller:
     def __init__(self,config):
         self.config = config
-        self.db = DBPool(config["database"])
+        self.db_pool = DBPool(config["database"])
         
     def post_weather_data(self, json_dict,site_id):
         weather_data = WeatherData(**json_dict)
@@ -78,7 +78,7 @@ class Controller:
         INSERT INTO weather_data (site_id, log_interval, time_measured, parameter_id, val)
         VALUES(%s,%s,to_timestamp(%s),%s,%s);
         """
-        conn = self.db.get_conn()
+        conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             cur.execute("DELETE FROM weather_data WHERE site_id=%s",(site_id,))
             data = weather_data.locationWeatherData[0].data
@@ -98,7 +98,7 @@ class Controller:
             if DEBUG:
                 print("inserted DATA for site_id=%s" % site_id)
         conn.commit()
-        conn.close()
+        self.db_pool.put_conn(conn)
 
     def merge_weather_data(self, original, new):
         # Times:
@@ -170,12 +170,12 @@ class Controller:
 
     def get_weather_data_by_site(self, site_id, timeStart, timeEnd):
         
-        conn = self.db.get_conn()
+        conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             cur.execute("SELECT * FROM site WHERE site_id=%s",(site_id,))
             site = cur.fetchone()
             if site is None:
-                conn.close()
+                self.db_pool.put_conn(conn)
                 return None
             cur.execute("SELECT EXTRACT(epoch FROM wd.time_measured) AS epoch_seconds, wd.* FROM weather_data wd WHERE site_id=%s AND time_measured BETWEEN to_timestamp(%s) AND to_timestamp(%s)",(site_id,timeStart,timeEnd))
             # Build a dict hashed with timestamps
@@ -207,13 +207,13 @@ class Controller:
                 timeEnd = None if time_end is None else int(time_end),
                 locationWeatherData = [lwd]
                 )
-            conn.close()
+            self.db_pool.put_conn(conn)
             return weather_data
         
 
     def get_weather_data_by_location(self, longitude, latitude, parameters, timeStart, timeEnd) -> WeatherData:
         # Check if we have a site close enough
-        conn = self.db.get_conn()
+        conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             cur.execute("""
             SELECT ST_Distance('SRID=4326;POINT(%(longitude)s %(latitude)s)'::geography, s.location::geography, false) AS distance_meters, 
@@ -228,7 +228,7 @@ class Controller:
             site = None
             for a_site in cur:
                 site = a_site if site is None else (a_site if a_site["distance_meters"] < site["distance_meters"] else site)
-        conn.close()
+        self.db_pool.put_conn(conn)
         # If none: Create the new site
         if site is None:
             site = self.create_site(longitude, latitude)
@@ -239,27 +239,27 @@ class Controller:
         return weather_data if self.is_weather_data_up_to_date(weather_data, timeStart, timeEnd) else "DATA IS NOT AVAILABLE. Please check in later"
 
     def get_all_sites(self):
-        conn = self.db.get_conn()
+        conn = self.db_pool.get_conn()
         all_sites = []
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             cur.execute("SELECT * FROM site")
             for res in cur.fetchall():
                 all_sites.append(Site(site_id=res["site_id"],location=res["location"]))
-        conn.close()
+        self.db_pool.put_conn(conn)
         return all_sites
     
     def get_site(self, site_id) -> Site:
-        conn = self.db.get_conn()
+        conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             cur.execute("SELECT * FROM site WHERE site_id=%s",(site_id,))
             res = cur.fetchone()
             site = None if res is None else Site(site_id=site_id,location=res["location"])
-        conn.close()
+        self.db_pool.put_conn(conn)
         return site
             
     def create_site(self, longitude, latitude) -> Site:
-        # Create the site in db
-        conn = self.db.get_conn()
+        # Create the site in db_pool
+        conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             cur.execute("INSERT INTO site(location) VALUES(ST_SetSRID(ST_MakePoint(%s,%s,0),4326)) RETURNING site_id",(longitude,latitude))
             site_id = cur.fetchone()["site_id"]
@@ -267,7 +267,7 @@ class Controller:
             site = cur.fetchone()
             
         conn.commit()
-        conn.close()
+        self.db_pool.put_conn(conn)
         return site
     
     
@@ -282,10 +282,10 @@ class Controller:
     # Criteria for data init: No weather data or data up until only 24 hours ago
     # TODO: Make this more intelligent (check for holes etc)
     def does_site_need_data_init(self, site_id):
-        conn = self.db.get_conn()
+        conn = self.db_pool.get_conn()
         with conn.cursor() as cur:
             cur.execute("SELECT max(time_measured) FROM weather_data WHERE site_id=%s",(site_id,))
             max_time = cur.fetchone()[0]
-        conn.close()
+        self.db_pool.put_conn(conn)
         return max_time is None or max_time.timestamp() < (datetime.now() - timedelta(hours=24)).timestamp()
     

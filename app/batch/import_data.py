@@ -1,13 +1,10 @@
 #!/usr/bin/python3
-from psycopg2 import extras
 from datetime import datetime
 import numpy
 import json
 import os,sys
-from pickle import FALSE
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models import Site, WeatherData, LocationWeatherData
-from db_pool import DBPool
 
 interval = 3600
 
