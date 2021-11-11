@@ -6,8 +6,8 @@
     <body>
 		<p><a href="https://ipmdecisions.net/" target="new"><img src="/static/images/output-onlinepngtools.png" style="width: 250px;"/></a></p>
 		<h1>Euroweather</h1>
-		<p>This service provides location based synthetic seasonal weather data for Europe. The service is 
-		based on gridded weather forecasts from Deutsche Wetterdienst which are downloaded and stored 
+		<p>This service provides location based synthetic seasonal weather data for Europe. It is 
+		based on gridded weather forecasts from Deutsche Wetterdienst, downloaded and stored 
 		throughout the season.The data for each location is interpolated from the 7*7km grid. The parameters provided are:
 		</p>
 		<ul>
@@ -18,11 +18,11 @@
 		</ul>
 		
 		<p>When a request for a specific location is made for the first time during a season, the data 
-		from January 1st and up til the request date needs to be collected from the from the backend's 
+		from January 1st to the request date needs to be collected from the backend's 
 		rather big archive of NetCDF files. Thus, the user will not get the data immediately from the first 
 		request. These location initializations take place once or every second hour (depending on the 
 		backend server's capacity). After that, the data are cached in this service's database for 
-		quick/immediate access, and daily requests to the backend for updates ensure that the database 
+		quick/immediate access, and daily requests to the backend ensure that the database 
 		stays up-to-date.</p>
 		
 		<p>This service is part of the <a href="https://ipmdecisions.net/" target="new">IPM Decisions platform</a></p>
