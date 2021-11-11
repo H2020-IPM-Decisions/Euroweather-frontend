@@ -65,7 +65,7 @@ class LocationWeatherData:
         self.altitude = kwargs.get("altitude", None)
         self.longitude = kwargs.get("longitude", None)
         self.latitude = kwargs.get("latitude", None)
-        self.QC = kwargs.get("QC", None)
+        self.qc = kwargs.get("qc", None)
         self.data = kwargs.get("data",[])
 
 
