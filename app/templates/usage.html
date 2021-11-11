@@ -11,17 +11,17 @@
 		throughout the season.The data for each location is interpolated from the 7*7km grid. The parameters provided are:
 		</p>
 		<ul>
-			<li>Air temperature at 2m in &deg;C</li>
-			<li>Relative humidity at 2m in %</li>
-			<li>Wind speed at 10m in m/s</li>
-			<li>Precipitation in mm</li>
+			<li>Air temperature at 2m (&deg;C)</li>
+			<li>Relative humidity at 2m (%)</li>
+			<li>Wind speed at 10m (m/s)</li>
+			<li>Precipitation (mm)</li>
 		</ul>
 		
 		<p>When a request for a specific location is made for the first time during a season, the data 
 		from January 1st to the request date needs to be collected from the backend's 
 		rather big archive of NetCDF files. Thus, the user will not get the data immediately from the first 
 		request. These location initializations take place once or every second hour (depending on the 
-		backend server's capacity). After that, the data are cached in this service's database for 
+		backend server's capacity). After that, the data is cached in this service's database for 
 		quick/immediate access, and daily requests to the backend ensure that the database 
 		stays up-to-date.</p>
 		
