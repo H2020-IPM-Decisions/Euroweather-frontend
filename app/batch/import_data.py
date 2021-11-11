@@ -132,7 +132,7 @@ def import_data(coms_path, site_id) -> bool:
         data_imported.locationWeatherData.append(location_weather_data)
         timeStart = WeatherData.to_epoch_seconds("%s-01-01" % datetime.now().year) # ISO date e.g. 2021-10-22 (Oct 22 2021)
         timeEnd = WeatherData.to_epoch_seconds("%s-12-31" % datetime.now().year)
-        data_from_db = controller.get_weather_data_by_site(site_id, timeStart, timeEnd)
+        data_from_db = controller.get_weather_data_by_site(site_id, None, timeStart, timeEnd)
         if DEBUG:
             print(data_from_db.timeStart)
             print("IMPORT DATA %s For site id %s, current timeStart = %s" %(coms_path,site_id,

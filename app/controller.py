@@ -168,7 +168,7 @@ class Controller:
             float(weather_data.locationWeatherData[0].latitude)
             ) 
 
-    def get_weather_data_by_site(self, site_id, timeStart, timeEnd):
+    def get_weather_data_by_site(self, site_id, parameters, timeStart, timeEnd):
         
         conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
@@ -177,7 +177,23 @@ class Controller:
             if site is None:
                 self.db_pool.put_conn(conn)
                 return None
-            cur.execute("SELECT EXTRACT(epoch FROM wd.time_measured) AS epoch_seconds, wd.* FROM weather_data wd WHERE site_id=%s AND time_measured BETWEEN to_timestamp(%s) AND to_timestamp(%s)",(site_id,timeStart,timeEnd))
+            sql_1_tpl = "SELECT EXTRACT(epoch FROM wd.time_measured) AS epoch_seconds, wd.* FROM weather_data wd WHERE site_id=%s"
+            sql_2_tpl = "AND time_measured BETWEEN to_timestamp(%s) AND to_timestamp(%s)" 
+            sql_3_tpl = "AND parameter_id IN %s"
+            
+            sql = [sql_1_tpl]
+            sql_params = [site_id]
+            if timeStart is not None and timeEnd is not None:
+                sql.append(sql_2_tpl)
+                sql_params.append(timeStart)
+                sql_params.append(timeEnd)
+            if parameters != None and len(parameters) > 0:
+                sql.append(sql_3_tpl)
+                sql_params.append(tuple(parameters))
+            if DEBUG:
+                print(sql)
+                print(sql_params)
+            cur.execute(" ".join(sql),tuple(sql_params))
             # Build a dict hashed with timestamps
             # Also, build parameter list
             time_start = None
@@ -234,7 +250,7 @@ class Controller:
             site = self.create_site(longitude, latitude)
         # Get weather data
         #print("Site id=%s" % site["site_id"])
-        weather_data = self.get_weather_data_by_site(site["site_id"], timeStart, timeEnd)
+        weather_data = self.get_weather_data_by_site(site["site_id"], parameters, timeStart, timeEnd)
         # If not updated data: Return message
         return weather_data if self.is_weather_data_up_to_date(weather_data, timeStart, timeEnd) else "DATA IS NOT AVAILABLE. Please check in later"
 
