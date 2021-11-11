@@ -22,6 +22,7 @@ from psycopg2 import extras
 from shapely import wkb
 from shapely.geometry import Point, LineString
 from pyproj import Geod
+from timezonefinder import TimezoneFinder
 
 from datetime import datetime, timedelta
 import numpy
@@ -30,6 +31,7 @@ import math
 import os
 import sys
 import json
+import pytz
 from pickle import NONE
 #from imaplib import dat
 
@@ -52,7 +54,7 @@ kelvin_0c = 272.15
 interval = 3600 # Hourly values, always
 location_tolerance_m = 100
 
-DEBUG = False
+DEBUG = True
 
 class Controller:
     def __init__(self,config):
@@ -61,7 +63,7 @@ class Controller:
         
     def post_weather_data(self, json_dict,site_id):
         weather_data = WeatherData(**json_dict)
-        site = self.get_weather_data_by_site(site_id)
+        site = self.get_hourly_weather_data_by_site(site_id)
         if site is None:
             return {"status":404,"message":"Site not found"}
         # Found the site. Ensure it's at the same location
@@ -168,15 +170,144 @@ class Controller:
             float(weather_data.locationWeatherData[0].latitude)
             ) 
 
-    def get_weather_data_by_site(self, site_id, parameters, timeStart, timeEnd):
-        
+    def get_hourly_weather_data_by_site(self, site_id, parameters, timeStart, timeEnd):
+        # input check
         conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             cur.execute("SELECT * FROM site WHERE site_id=%s",(site_id,))
             site = cur.fetchone()
+            self.db_pool.put_conn(conn)
             if site is None:
-                self.db_pool.put_conn(conn)
                 return None
+        # Build a dict hashed with timestamps
+        # Also, build parameter list
+        time_start = None
+        time_end = None
+        params = set()
+        location = wkb.loads(site["location"],hex=True)
+        weather_data_list = self.get_weather_data_from_db(site_id, parameters, timeStart, timeEnd)
+        # Inspect the data
+        for weather_data in weather_data_list:
+            time_start = weather_data["epoch_seconds"] if time_start is None else min(time_start, weather_data["epoch_seconds"])
+            time_end = weather_data["epoch_seconds"] if time_end is None else max(time_end, weather_data["epoch_seconds"])
+            params.add(weather_data["parameter_id"])
+        params = list(params)
+        # We have length and dims now!
+        data = [] if len(weather_data_list) == 0 else numpy.empty(shape=(int(len(weather_data_list)/len(params)),len(params)),dtype='object').tolist()
+        for weather_data in weather_data_list:
+            data[int((weather_data["epoch_seconds"] - time_start)/3600)][params.index(weather_data["parameter_id"])] = None if weather_data["val"] is None else float(weather_data["val"])
+        lwd = LocationWeatherData(
+            longitude = location.x,
+            latitude = location.y,
+            data = data
+            )
+        weather_data = WeatherData(
+            weatherParameters = params,
+            interval = interval,
+            timeStart = None if time_start is None else int(time_start),
+            timeEnd = None if time_end is None else int(time_end),
+            locationWeatherData = [lwd]
+            )
+        
+        return weather_data
+    
+    def get_daily_weather_data_by_site(self, site_id, parameters, timeStart, timeEnd):
+        # input check
+        conn = self.db_pool.get_conn()
+        with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM site WHERE site_id=%s",(site_id,))
+            site = cur.fetchone()
+            self.db_pool.put_conn(conn)
+            if site is None:
+                return None
+        # Build a dict hashed with timestamps
+        # Also, build parameter list
+        time_start = None
+        time_end = None
+        params = set()
+        location = wkb.loads(site["location"],hex=True)
+        ## Finding time zone for the site
+        tf = TimezoneFinder()
+        tz=pytz.timezone(tf.timezone_at(lng=location.x, lat=location.y))
+        if DEBUG:  
+            print("Timezone for %s, %s = %s" %(location.x,location.y,tz))
+        
+        hourly_weather_data_list = self.get_weather_data_from_db(site_id, parameters, timeStart, timeEnd)
+        
+        # Inspect the data
+        for weather_data in hourly_weather_data_list:
+            time_start = weather_data["epoch_seconds"] if time_start is None else min(time_start, weather_data["epoch_seconds"])
+            time_end = weather_data["epoch_seconds"] if time_end is None else max(time_end, weather_data["epoch_seconds"])
+            params.add(weather_data["parameter_id"])
+        params = list(params)
+        # We have length and dims now!
+        data = [] if len(hourly_weather_data_list) == 0 else numpy.empty(shape=(int(len(hourly_weather_data_list)/len(params)),len(params)),dtype='object').tolist()
+        for weather_data in hourly_weather_data_list:
+            data[int((weather_data["epoch_seconds"] - time_start)/3600)][params.index(weather_data["parameter_id"])] = None if weather_data["val"] is None else float(weather_data["val"])
+        lwd = LocationWeatherData(
+            longitude = location.x,
+            latitude = location.y,
+            data = data
+            )
+        
+        weather_data = WeatherData(
+            weatherParameters = params,
+            interval = interval,
+            timeStart = None if time_start is None else int(time_start),
+            timeEnd = None if time_end is None else int(time_end),
+            locationWeatherData = [lwd]
+            )
+        
+        daily_weather_data = self.get_daily_weather_data_from_hourly(weather_data, tz)
+        
+        return daily_weather_data
+    
+    def get_daily_weather_data_from_hourly(self, hourly_weather_data:WeatherData, local_time_zone):
+        # Start from the first local midnight that the data contains
+        lwd = hourly_weather_data.locationWeatherData[0]
+        current_timestamp = hourly_weather_data.timeStart
+        i0 = 0
+        while i0 < len(lwd.data):
+            i23 = min(
+                len(lwd.data),
+                i0 + 23 if i0 > 0 else 23 - int(datetime.strftime(datetime.utcfromtimestamp(hourly_weather_data.timeStart).astimezone(local_time_zone), "%H"))
+                )
+            print("%s-%s, %s-%s" % (i0,i23, datetime.utcfromtimestamp(hourly_weather_data.timeStart + (i0*3600)).astimezone(local_time_zone), datetime.utcfromtimestamp(hourly_weather_data.timeStart + (i23*3600)).astimezone(local_time_zone)))
+            i0 = i0 + 24 if i0 > 0 else 1+i23-i0
+            
+        
+        
+        # End at the last local midnight that the data contains (make sure no index out of bounds)
+        """
+        # Organize the data per parameter and per day
+        parameter_buckets = {}
+        for param in hourly_weather_data.weatherParameters:
+            
+        for hwd in hourly_weather_data_list:
+            parameter_bucket = parameter_buckets.get(hwd["parameter_id"], None)
+            if  parameter_bucket is None:
+                parameter_bucket = {}
+                parameter_buckets[hwd["parameter_id"]] = parameter_bucket
+            # Get the "Daily" timestamp for this hourly value
+            local_date_bucket_key = datetime.strftime(hwd["time_measured"].astimezone(local_time_zone), "%Y-%m-%d")
+            date_bucket = parameter_bucket.get(local_date_bucket_key, None)
+            if date_bucket is None:
+                date_bucket = []
+                parameter_bucket[local_date_bucket_key] = date_bucket
+            date_bucket.append(hwd["val"])
+            #print("%s, %s, %s" %(hwd["time_measured"], hwd["time_measured"].astimezone(local_time_zone), datetime.strftime(hwd["time_measured"].astimezone(local_time_zone), "%Y-%m-%d")))
+            #print(hwd)
+        if DEBUG:
+            print(parameter_buckets)
+        
+        # Aggregate
+        for parameter,
+        """ 
+        return None
+    
+    def get_weather_data_from_db(self, site_id, parameters, timeStart, timeEnd):
+        conn = self.db_pool.get_conn()
+        with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
             sql_1_tpl = "SELECT EXTRACT(epoch FROM wd.time_measured) AS epoch_seconds, wd.* FROM weather_data wd WHERE site_id=%s"
             sql_2_tpl = "AND time_measured BETWEEN to_timestamp(%s) AND to_timestamp(%s)" 
             sql_3_tpl = "AND parameter_id IN %s"
@@ -194,40 +325,12 @@ class Controller:
                 print(sql)
                 print(sql_params)
             cur.execute(" ".join(sql),tuple(sql_params))
-            # Build a dict hashed with timestamps
-            # Also, build parameter list
-            time_start = None
-            time_end = None
-            params = set()
-            location = wkb.loads(site["location"],hex=True)
+            
             weather_data_list = cur.fetchall()
-            # Inspect the data
-            for weather_data in weather_data_list:
-                time_start = weather_data["epoch_seconds"] if time_start is None else min(time_start, weather_data["epoch_seconds"])
-                time_end = weather_data["epoch_seconds"] if time_end is None else max(time_end, weather_data["epoch_seconds"])
-                params.add(weather_data["parameter_id"])
-            params = list(params)
-            # We have length and dims now!
-            data = [] if len(weather_data_list) == 0 else numpy.empty(shape=(int(len(weather_data_list)/len(params)),len(params)),dtype='object').tolist()
-            for weather_data in weather_data_list:
-                data[int((weather_data["epoch_seconds"] - time_start)/3600)][params.index(weather_data["parameter_id"])] = None if weather_data["val"] is None else float(weather_data["val"])
-            lwd = LocationWeatherData(
-                longitude = location.x,
-                latitude = location.y,
-                data = data
-                )
-            weather_data = WeatherData(
-                weatherParameters = params,
-                interval = interval,
-                timeStart = None if time_start is None else int(time_start),
-                timeEnd = None if time_end is None else int(time_end),
-                locationWeatherData = [lwd]
-                )
             self.db_pool.put_conn(conn)
-            return weather_data
-        
+            return weather_data_list
 
-    def get_weather_data_by_location(self, longitude, latitude, parameters, timeStart, timeEnd) -> WeatherData:
+    def get_weather_data_by_location(self, longitude, latitude, parameters, timeStart, timeEnd, interval=3600) -> WeatherData:
         # Check if we have a site close enough
         conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
@@ -250,7 +353,7 @@ class Controller:
             site = self.create_site(longitude, latitude)
         # Get weather data
         #print("Site id=%s" % site["site_id"])
-        weather_data = self.get_weather_data_by_site(site["site_id"], parameters, timeStart, timeEnd)
+        weather_data = self.get_hourly_weather_data_by_site(site["site_id"], parameters, timeStart, timeEnd) if interval==3600 else self.get_daily_weather_data_by_site(site["site_id"], parameters, timeStart, timeEnd)
         # If not updated data: Return message
         return weather_data if self.is_weather_data_up_to_date(weather_data, timeStart, timeEnd) else "DATA IS NOT AVAILABLE. Please check in later"
 
