@@ -60,12 +60,22 @@ class WeatherData:
         retval["locationWeatherData"] = lwds_dict
         return retval 
 
+class Parameter:
+    #/** Method for how to create e.g. daily values from hourly values */
+    AGGREGATION_TYPE_AVERAGE = "AVG";
+    #    /** Method for how to create e.g. daily values from hourly values */
+    AGGREGATION_TYPE_MINIMUM = "MIN";
+    #    /** Method for how to create e.g. daily values from hourly values */
+    AGGREGATION_TYPE_MAXIMUM = "MAX";
+    #    /** Method for how to create e.g. daily values from hourly values */
+    AGGREGATION_TYPE_SUM = "SUM";
+
 class LocationWeatherData:
     def __init__(self, *args, **kwargs):
         self.altitude = kwargs.get("altitude", None)
         self.longitude = kwargs.get("longitude", None)
         self.latitude = kwargs.get("latitude", None)
-        self.QC = kwargs.get("QC", None)
+        self.qc = kwargs.get("qc", None)
         self.data = kwargs.get("data",[])
 
 
