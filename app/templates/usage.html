@@ -16,7 +16,7 @@
 			<li>Wind speed at 10m (m/s)</li>
 			<li>Precipitation (mm)</li>
 		</ul>
-		
+		<p>The log interval is either hourly (default) or daily</p>
 		<p>When a request for a specific location is made for the first time during a season, the data 
 		from January 1st to the request date needs to be collected from the backend's 
 		rather big archive of NetCDF files. Thus, the user will not get the data immediately from the first 
@@ -35,12 +35,14 @@
 
         <h1>Usage</h1>
         <p>
-            /weather_data?latitude=[]&amp;longitude=[]&amp;parameters=[,,]&amp;timeStart=[]&amp;timeEnd=[]
+            /weather_data?latitude=[]&amp;longitude=[]&amp;parameters=[,,]&amp;timeStart=[]&amp;timeEnd=[]&amp;interval=[]
         </p>
 		<ul>
 			<li>latitude and longitude are mandatory parameters. Coordinate system: WGS84 (Decimal degrees)</li>
 			<li>parameters are optional <a href="https://raw.githubusercontent.com/H2020-IPM-Decisions/formats/master/weather_data/weather_parameters_draft_v2.yaml" target="new">Parameters list</a></li>
-			<li>timeStart and timeEnd are optional. Format: YYYY-mm-dd, e.g. 2021-10-28. If omitted, data starting from Jan 1st and as far as data goes will be returned</li> 
+			<li>timeStart and timeEnd are optional. Format: YYYY-mm-dd, e.g. 2021-10-28. If omitted, data starting from Jan 1st and as far as data goes will be returned</li>
+			<li>interval is optional. The default value is 3600 (hourly values). To get daily values, set interval=86400. The daily values are 
+			calculated using the location's timezone.</li> 
 		</ul>
 		<h2>Example</h2>
 		<p><a href="/weather_data?latitude=50.109&amp;longitude=10.961&amp;parameters=1001,2001&timeStart=2021-10-28&timeEnd=2021-11-15">/weather_data?latitude=50.109&amp;longitude=10.961&amp;parameters=1001,2001</a></p>

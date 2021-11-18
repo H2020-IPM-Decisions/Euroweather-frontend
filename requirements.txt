@@ -4,3 +4,5 @@ postgis
 shapely
 pyproj
 numpy
+pytz
+timezonefinder[numba]

@@ -38,7 +38,7 @@ def index():
 
 @app.route("/weather_data/<site_id>", methods=['GET'])
 def get_weather_data_for_site(site_id):
-    data = controller.get_weather_data_by_site(site_id)
+    data = controller.get_hourly_weather_data_by_site(site_id)
     return data.as_dict()
 
 @app.route("/weather_data", methods=['GET'])
@@ -46,6 +46,7 @@ def get_weather_data():
     longitude = request.args.get("longitude", None) # WGS84
     latitude = request.args.get("latitude", None) # WGS84
     parameters = request.args.get("parameters", None) # Comma separated list
+    interval = request.args.get("interval", 3600)
     # TODO Proper time check
     timeStart = WeatherData.to_epoch_seconds(request.args.get("timeStart", ("%s-01-01" % datetime.now().year))) # ISO date e.g. 2021-10-22 (Oct 22 2021)
     timeEnd = WeatherData.to_epoch_seconds(request.args.get("timeEnd", "%s-12-31" % datetime.now().year))
@@ -57,7 +58,7 @@ def get_weather_data():
     except ValueError as e:
         return "BAD REQUEST: Error in specified weather parameters: %s" % e, 403
     try:
-        data = controller.get_weather_data_by_location(longitude, latitude, parameters,timeStart,timeEnd)
+        data = controller.get_weather_data_by_location(longitude, latitude, parameters,timeStart,timeEnd,interval)
         if isinstance(data, WeatherData):
             return data.as_dict()
         else:
