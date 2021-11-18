@@ -248,7 +248,7 @@ class Controller:
             print("Timezone for %s, %s = %s" %(location.x,location.y,tz))
         
         hourly_weather_data_list = self.get_weather_data_from_db(site_id, parameters, timeStart, timeEnd)
-        
+                
         # Inspect the data
         for weather_data in hourly_weather_data_list:
             time_start = weather_data["epoch_seconds"] if time_start is None else min(time_start, weather_data["epoch_seconds"])
@@ -273,6 +273,7 @@ class Controller:
             locationWeatherData = [lwd]
             )
         
+        
         daily_weather_data = self.get_daily_weather_data_from_hourly(weather_data, tz)
         
         return daily_weather_data
@@ -280,53 +281,61 @@ class Controller:
     def get_daily_weather_data_from_hourly(self, hourly_weather_data:WeatherData, local_time_zone):
         
         lwd = hourly_weather_data.locationWeatherData[0]
-        i0 = 0
-        data_numpy = numpy.swapaxes(numpy.array(lwd.data).astype(float),0,1)
-        ## Collect aggregation types for the parameters in this data set
-        aggregation_types = self.get_aggregation_types(hourly_weather_data.weatherParameters)
+        
+        
+        
         #print(len(data_numpy))
-        daily_data=[]
         
-        # Tounge-straight-in-mouth conversion from hours timestamp to midnight timestamp
-        time_start_hour = datetime.utcfromtimestamp(hourly_weather_data.timeStart).astimezone(local_time_zone)
-        time_end_hour = datetime.utcfromtimestamp(hourly_weather_data.timeEnd).astimezone(local_time_zone)
         
-        time_start = datetime.combine(time_start_hour.date(), time_start_hour.min.time()).astimezone(local_time_zone).isoformat()
-        time_end = datetime.combine(time_end_hour.date(), time_end_hour.min.time()).astimezone(local_time_zone).isoformat()
+        
         #print("%s,%s" %(time_start,time_end))
-        # Iterating the data set in 24h blocks, adjusting for any missing data at the beginning and end of the array
-        while i0 < len(lwd.data):
-            i23 = min(
-                len(lwd.data),
-                i0 + 23 if i0 > 0 else 23 - int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart,local_time_zone), "%H"))
-                )
-            # Adjust when DST is changing (twice a year)
-            if int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i23*3600),local_time_zone), "%H")) == 22:
-                i23 = i23 + 1
-            elif  int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i23*3600),local_time_zone), "%H")) == 0:
-                i23 = i23 -1
-            #print(hourly_weather_data.timeStart + (i23*3600))
-            #print("%s-%s, %s-%s, %s-%s" % (i0,i23, datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),local_time_zone), datetime.fromtimestamp(hourly_weather_data.timeStart + (i23*3600),local_time_zone), datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),pytz.utc), datetime.fromtimestamp(hourly_weather_data.timeStart + (i23*3600), pytz.utc)))
-            values_for_one_day = []
-            for p_idx, parameter in enumerate(hourly_weather_data.weatherParameters):
-                hourly_values_for_param_and_day = data_numpy[p_idx,i0:i23+1]
-                # Check hourly_values_for_param_and_day for enough values (min 15 non-nulls)
-                if numpy.count_nonzero(~numpy.isnan(hourly_values_for_param_and_day)) < daily_aggregation_minimum_hourly_values:
-                    aggregate = None
-                else:
-                    # Using labeled numpy aggregation functions 
-                    aggregate = aggregation_fn[aggregation_types[p_idx]](hourly_values_for_param_and_day)
-                    if isnan(aggregate):
-                        aggregate = None
-                values_for_one_day.append(aggregate)
-            daily_data.append(values_for_one_day)
+        time_start = None
+        time_end = None
+        daily_data=[]
+        if len(lwd.data) > 0:
+            ## Collect aggregation types for the parameters in this data set
+            aggregation_types = self.get_aggregation_types(hourly_weather_data.weatherParameters)
+            # Tounge-straight-in-mouth conversion from hours timestamp to midnight timestamp
+            time_start_hour = datetime.utcfromtimestamp(hourly_weather_data.timeStart).astimezone(local_time_zone)
+            time_end_hour = datetime.utcfromtimestamp(hourly_weather_data.timeEnd).astimezone(local_time_zone)
             
-            i0 = i0 + 24 if i0 > 0 else 1+i23-i0
-            # Adjust when DST is changing (twice a year)
-            if int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),local_time_zone), "%H")) == 1:
-                i0 = i0 - 1
-            elif  int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),local_time_zone), "%H")) == 23:
-                i0 = i0 + 1
+            time_start = datetime.combine(time_start_hour.date(), time_start_hour.min.time()).astimezone(local_time_zone).isoformat()
+            time_end = datetime.combine(time_end_hour.date(), time_end_hour.min.time()).astimezone(local_time_zone).isoformat()
+            data_numpy = numpy.swapaxes(numpy.array(lwd.data).astype(float),0,1)
+            # Iterating the data set in 24h blocks, adjusting for any missing data at the beginning and end of the array
+            i0 = 0
+            while i0 < len(lwd.data):
+                i23 = min(
+                    len(lwd.data),
+                    i0 + 23 if i0 > 0 else 23 - int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart,local_time_zone), "%H"))
+                    )
+                # Adjust when DST is changing (twice a year)
+                if int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i23*3600),local_time_zone), "%H")) == 22:
+                    i23 = i23 + 1
+                elif  int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i23*3600),local_time_zone), "%H")) == 0:
+                    i23 = i23 -1
+                #print(hourly_weather_data.timeStart + (i23*3600))
+                #print("%s-%s, %s-%s, %s-%s" % (i0,i23, datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),local_time_zone), datetime.fromtimestamp(hourly_weather_data.timeStart + (i23*3600),local_time_zone), datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),pytz.utc), datetime.fromtimestamp(hourly_weather_data.timeStart + (i23*3600), pytz.utc)))
+                values_for_one_day = []
+                for p_idx, parameter in enumerate(hourly_weather_data.weatherParameters):
+                    hourly_values_for_param_and_day = data_numpy[p_idx,i0:i23+1]
+                    # Check hourly_values_for_param_and_day for enough values (min 15 non-nulls)
+                    if numpy.count_nonzero(~numpy.isnan(hourly_values_for_param_and_day)) < daily_aggregation_minimum_hourly_values:
+                        aggregate = None
+                    else:
+                        # Using labeled numpy aggregation functions 
+                        aggregate = aggregation_fn[aggregation_types[p_idx]](hourly_values_for_param_and_day)
+                        if isnan(aggregate):
+                            aggregate = None
+                    values_for_one_day.append(aggregate)
+                daily_data.append(values_for_one_day)
+                
+                i0 = i0 + 24 if i0 > 0 else 1+i23-i0
+                # Adjust when DST is changing (twice a year)
+                if int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),local_time_zone), "%H")) == 1:
+                    i0 = i0 - 1
+                elif  int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),local_time_zone), "%H")) == 23:
+                    i0 = i0 + 1
             
         # TODO Adjust timeStart and timeEnd
         lwd_daily = LocationWeatherData(
