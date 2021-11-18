@@ -280,25 +280,17 @@ class Controller:
     
     def get_daily_weather_data_from_hourly(self, hourly_weather_data:WeatherData, local_time_zone):
         
-        lwd = hourly_weather_data.locationWeatherData[0]
-        
-        
-        
-        #print(len(data_numpy))
-        
-        
-        
         #print("%s,%s" %(time_start,time_end))
         time_start = None
         time_end = None
         daily_data=[]
+        lwd = hourly_weather_data.locationWeatherData[0]
         if len(lwd.data) > 0:
             ## Collect aggregation types for the parameters in this data set
             aggregation_types = self.get_aggregation_types(hourly_weather_data.weatherParameters)
             # Tounge-straight-in-mouth conversion from hours timestamp to midnight timestamp
             time_start_hour = datetime.utcfromtimestamp(hourly_weather_data.timeStart).astimezone(local_time_zone)
             time_end_hour = datetime.utcfromtimestamp(hourly_weather_data.timeEnd).astimezone(local_time_zone)
-            
             time_start = datetime.combine(time_start_hour.date(), time_start_hour.min.time()).astimezone(local_time_zone).isoformat()
             time_end = datetime.combine(time_end_hour.date(), time_end_hour.min.time()).astimezone(local_time_zone).isoformat()
             data_numpy = numpy.swapaxes(numpy.array(lwd.data).astype(float),0,1)
@@ -337,7 +329,7 @@ class Controller:
                 elif  int(datetime.strftime(datetime.fromtimestamp(hourly_weather_data.timeStart + (i0*3600),local_time_zone), "%H")) == 23:
                     i0 = i0 + 1
             
-        # TODO Adjust timeStart and timeEnd
+        
         lwd_daily = LocationWeatherData(
             longitude = lwd.longitude,
             latitude = lwd.latitude,
@@ -347,41 +339,16 @@ class Controller:
             )
         daily_weather_data = WeatherData(
             weatherParameters = hourly_weather_data.weatherParameters,
-            timeStart = time_start, #hourly_weather_data.timeStart,
-            timeEnd = time_end, #hourly_weather_data.timeEnd,
+            timeStart = time_start, 
+            timeEnd = time_end, 
             interval = 86400,
             locationWeatherData = [lwd_daily]
             )
-        #print(daily_data)
-        return daily_weather_data
         
-        # End at the last local midnight that the data contains (make sure no index out of bounds)
-        """
-        # Organize the data per parameter and per day
-        parameter_buckets = {}
-        for param in hourly_weather_data.weatherParameters:
-            
-        for hwd in hourly_weather_data_list:
-            parameter_bucket = parameter_buckets.get(hwd["parameter_id"], None)
-            if  parameter_bucket is None:
-                parameter_bucket = {}
-                parameter_buckets[hwd["parameter_id"]] = parameter_bucket
-            # Get the "Daily" timestamp for this hourly value
-            local_date_bucket_key = datetime.strftime(hwd["time_measured"].astimezone(local_time_zone), "%Y-%m-%d")
-            date_bucket = parameter_bucket.get(local_date_bucket_key, None)
-            if date_bucket is None:
-                date_bucket = []
-                parameter_bucket[local_date_bucket_key] = date_bucket
-            date_bucket.append(hwd["val"])
-            #print("%s, %s, %s" %(hwd["time_measured"], hwd["time_measured"].astimezone(local_time_zone), datetime.strftime(hwd["time_measured"].astimezone(local_time_zone), "%Y-%m-%d")))
-            #print(hwd)
         if DEBUG:
-            print(parameter_buckets)
-        
-        # Aggregate
-        for parameter,
-        """ 
-        return None
+            print(daily_data)
+            
+        return daily_weather_data
     
     def get_aggregation_types(self, parameters:list) -> list:
         conn = self.db_pool.get_conn()
