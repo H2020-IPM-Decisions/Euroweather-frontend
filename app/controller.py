@@ -186,6 +186,7 @@ class Controller:
             ) 
 
     def get_hourly_weather_data_by_site(self, site_id, parameters, timeStart, timeEnd):
+        
         # input check
         conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
@@ -227,6 +228,7 @@ class Controller:
         return weather_data
     
     def get_daily_weather_data_by_site(self, site_id, parameters, timeStart, timeEnd):
+        #print("DAYBYSITE?: %s,%s" % (datetime.fromtimestamp(timeStart), datetime.fromtimestamp(timeEnd)))
         # input check
         conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
@@ -254,6 +256,7 @@ class Controller:
             time_start = weather_data["epoch_seconds"] if time_start is None else min(time_start, weather_data["epoch_seconds"])
             time_end = weather_data["epoch_seconds"] if time_end is None else max(time_end, weather_data["epoch_seconds"])
             params.add(weather_data["parameter_id"])
+        #print("DAYBYSITE2?: %s,%s" % (datetime.fromtimestamp(time_start), datetime.fromtimestamp(time_end)))
         params = list(params)
         # We have length and dims now!
         data = [] if len(hourly_weather_data_list) == 0 else numpy.empty(shape=(int(len(hourly_weather_data_list)/len(params)),len(params)),dtype='object').tolist()
@@ -289,10 +292,12 @@ class Controller:
             ## Collect aggregation types for the parameters in this data set
             aggregation_types = self.get_aggregation_types(hourly_weather_data.weatherParameters)
             # Tounge-straight-in-mouth conversion from hours timestamp to midnight timestamp
-            time_start_hour = datetime.utcfromtimestamp(hourly_weather_data.timeStart).astimezone(local_time_zone)
-            time_end_hour = datetime.utcfromtimestamp(hourly_weather_data.timeEnd).astimezone(local_time_zone)
+            time_start_hour = datetime.fromtimestamp(hourly_weather_data.timeStart,local_time_zone)
+            time_end_hour = datetime.fromtimestamp(hourly_weather_data.timeEnd,local_time_zone)
+            #print("DAYFROMHOUR1?: %s,%s" %( time_start_hour, time_end_hour))
             time_start = datetime.combine(time_start_hour.date(), time_start_hour.min.time()).astimezone(local_time_zone).isoformat()
             time_end = datetime.combine(time_end_hour.date(), time_end_hour.min.time()).astimezone(local_time_zone).isoformat()
+            #print("DAYFROMHOUR2?: %s,%s" %( time_start, time_end))
             data_numpy = numpy.swapaxes(numpy.array(lwd.data).astype(float),0,1)
             # Iterating the data set in 24h blocks, adjusting for any missing data at the beginning and end of the array
             i0 = 0
@@ -414,7 +419,7 @@ class Controller:
         #print("Site id=%s" % site["site_id"])
         weather_data = self.get_hourly_weather_data_by_site(site["site_id"], parameters, timeStart, timeEnd) if interval==3600 else self.get_daily_weather_data_by_site(site["site_id"], parameters, timeStart, timeEnd)
         # If not updated data: Return message
-        return weather_data if self.is_weather_data_up_to_date(weather_data, timeStart, timeEnd) else "DATA IS NOT AVAILABLE. Please check in later"
+        return weather_data if self.is_weather_data_up_to_date(weather_data, timeStart, timeEnd, interval) else "DATA IS NOT AVAILABLE. Please check in later"
 
     def get_all_sites(self):
         conn = self.db_pool.get_conn()
@@ -449,13 +454,15 @@ class Controller:
         return site
     
     
-    def is_weather_data_up_to_date(self, weather_data:WeatherData, timeStart:str, timeEnd:str) -> bool:
-        #print(weather_data)
+    def is_weather_data_up_to_date(self, weather_data:WeatherData, timeStart:str, timeEnd:str, interval:int) -> bool:
+        #print("UPTODATE?: %s,%s" % (datetime.fromtimestamp(timeStart), datetime.fromtimestamp(timeEnd)))
         if weather_data is None or len(weather_data.locationWeatherData[0].data) == 0:
             return False
         #print("%s, %s" % (weather_data.timeEnd, (datetime.now() + timedelta(hours=24)).timestamp() ))
-        
-        return False if weather_data.timeEnd < min((datetime.now() + timedelta(hours=24)).timestamp(), timeEnd) else True
+        if interval == 3600:
+            return False if weather_data.timeEnd < min((datetime.now() + timedelta(hours=24)).timestamp(), timeEnd) else True
+        else:
+            return False if weather_data.timeEnd + (24 * 86400) < min((datetime.now() + timedelta(hours=24)).timestamp(), timeEnd) else True
     
     # Criteria for data init: No weather data or data up until only 24 hours ago
     # TODO: Make this more intelligent (check for holes etc)

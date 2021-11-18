@@ -49,7 +49,8 @@ def get_weather_data():
     interval = request.args.get("interval", 3600)
     # TODO Proper time check
     timeStart = WeatherData.to_epoch_seconds(request.args.get("timeStart", ("%s-01-01" % datetime.now().year))) # ISO date e.g. 2021-10-22 (Oct 22 2021)
-    timeEnd = WeatherData.to_epoch_seconds(request.args.get("timeEnd", "%s-12-31" % datetime.now().year))
+    # Assume that the user wants data for that whole day, so set hour to 23
+    timeEnd = WeatherData.to_epoch_seconds("%sT23:00:00" % request.args.get("timeEnd", "%s-12-31" % datetime.now().year))
     
     if longitude == None or latitude == None:
         return render_template("usage.html")
