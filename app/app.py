@@ -16,7 +16,7 @@
 import os
 import configparser
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask
 from flask import request
 from flask import render_template
@@ -31,6 +31,11 @@ app = Flask(__name__)
 config = configparser.ConfigParser()
 config.read(SITE_ROOT + "/europe-seasondata.ini")
 controller = Controller(config)
+
+# TODO: Change this to Jan 1st of "current year"
+tpl_str = "%s-01-01" if datetime.now().year > 2021 else "%s-09-24"
+data_start_time = datetime.fromisoformat(tpl_str % datetime.now().year)
+
 
 @app.route("/")
 def index():
@@ -48,9 +53,22 @@ def get_weather_data():
     parameters = request.args.get("parameters", None) # Comma separated list
     interval = request.args.get("interval", 3600)
     # TODO Proper time check
-    timeStart = WeatherData.to_epoch_seconds(request.args.get("timeStart", ("%s-01-01" % datetime.now().year))) # ISO date e.g. 2021-10-22 (Oct 22 2021)
+    # TODO !!!! Change back to default January 1st
+    timeStart = WeatherData.to_epoch_seconds(request.args.get("timeStart", (tpl_str % datetime.now().year))) # ISO date e.g. 2021-10-22 (Oct 22 2021)
     # Assume that the user wants data for that whole day, so set hour to 23
     timeEnd = WeatherData.to_epoch_seconds("%sT23:00:00" % request.args.get("timeEnd", "%s-12-31" % datetime.now().year))
+    
+    # Is timeStart too far in the future or in the past?
+    # Test of the past
+    time_start_test = datetime.fromtimestamp(timeStart)
+    time_end_test = datetime.fromtimestamp(timeEnd)
+    if  time_start_test < data_start_time or time_end_test < data_start_time:
+        return "BAD REQUEST: timeStart (%s) is before dataseries starts (%s)" % (time_start_test.isoformat(), data_start_time.isoformat()), 403
+    # Max future is the day after tomorrow
+    max_future = datetime.now() + timedelta(days=2)
+    if time_start_test > max_future:
+        return "BAD REQUEST: timeStart (%s) is after dataseries ends (%s)" % (time_start_test.isoformat(), max_future.isoformat()), 403
+
     
     if longitude == None or latitude == None:
         return render_template("usage.html")
