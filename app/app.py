@@ -36,6 +36,7 @@ controller = Controller(config)
 tpl_str = "%s-01-01" if datetime.now().year > 2021 else "%s-09-24"
 data_start_time = datetime.fromisoformat(tpl_str % datetime.now().year)
 
+available_parameters = [1001,2001,3001,4012]
 
 @app.route("/")
 def index():
@@ -76,6 +77,16 @@ def get_weather_data():
         parameters = None if parameters == None else [int(i) for i in parameters.split(",")]
     except ValueError as e:
         return "BAD REQUEST: Error in specified weather parameters: %s" % e, 403
+    
+    # Make sure we give a warning if the request parameters that we haven't got
+    if parameters is not None:
+        unavailable_parameters = []
+        for p in parameters:
+            if not p in available_parameters:
+                unavailable_parameters.append(p)
+        if len(unavailable_parameters) > 0:
+            return "BAD REQUEST: Parameters %s not served by Euroweather. We provide %s" % (unavailable_parameters,available_parameters), 403
+    
     try:
         data = controller.get_weather_data_by_location(longitude, latitude, parameters,timeStart,timeEnd,interval)
         if isinstance(data, WeatherData):
