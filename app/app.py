@@ -52,7 +52,7 @@ def get_weather_data():
     longitude = request.args.get("longitude", None) # WGS84
     latitude = request.args.get("latitude", None) # WGS84
     parameters = request.args.get("parameters", None) # Comma separated list
-    interval = request.args.get("interval", 3600)
+    interval = int(request.args.get("interval", 3600))
     # TODO Proper time check
     # TODO !!!! Change back to default January 1st
     timeStart = WeatherData.to_epoch_seconds(request.args.get("timeStart", (tpl_str % datetime.now().year))) # ISO date e.g. 2021-10-22 (Oct 22 2021)
