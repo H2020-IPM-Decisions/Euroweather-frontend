@@ -282,7 +282,8 @@ class Controller:
         return daily_weather_data
     
     def get_daily_weather_data_from_hourly(self, hourly_weather_data:WeatherData, local_time_zone):
-        
+        if DEBUG:
+            print("get_daily_weather_data_from_hourly %s %s" % (hourly_weather_data,local_time_zone))
         #print("%s,%s" %(time_start,time_end))
         time_start = None
         time_end = None
@@ -294,10 +295,12 @@ class Controller:
             # Tounge-straight-in-mouth conversion from hours timestamp to midnight timestamp
             time_start_hour = datetime.fromtimestamp(hourly_weather_data.timeStart,local_time_zone)
             time_end_hour = datetime.fromtimestamp(hourly_weather_data.timeEnd,local_time_zone)
-            #print("DAYFROMHOUR1?: %s,%s" %( time_start_hour, time_end_hour))
+            if DEBUG:
+                print("DAYFROMHOUR1?: %s,%s" %( time_start_hour, time_end_hour))
             time_start = datetime.combine(time_start_hour.date(), time_start_hour.min.time()).astimezone(local_time_zone).isoformat()
             time_end = datetime.combine(time_end_hour.date(), time_end_hour.min.time()).astimezone(local_time_zone).isoformat()
-            #print("DAYFROMHOUR2?: %s,%s" %( time_start, time_end))
+            if DEBUG:
+                print("DAYFROMHOUR2?: %s,%s" %( time_start, time_end))
             data_numpy = numpy.swapaxes(numpy.array(lwd.data).astype(float),0,1)
             # Iterating the data set in 24h blocks, adjusting for any missing data at the beginning and end of the array
             i0 = 0
@@ -321,7 +324,9 @@ class Controller:
                         aggregate = None
                     else:
                         # Using labeled numpy aggregation functions 
-                        aggregate = aggregation_fn[aggregation_types[p_idx]](hourly_values_for_param_and_day)
+                        if DEBUG:
+                            print(hourly_values_for_param_and_day)
+                        aggregate = aggregation_fn[aggregation_types[p_idx]](hourly_values_for_param_and_day[numpy.logical_not(numpy.isnan(hourly_values_for_param_and_day))])
                         if isnan(aggregate):
                             aggregate = None
                     values_for_one_day.append(aggregate)
