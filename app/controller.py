@@ -185,7 +185,7 @@ class Controller:
             float(weather_data.locationWeatherData[0].latitude)
             ) 
 
-    def get_hourly_weather_data_by_site(self, site_id, parameters, timeStart, timeEnd):
+    def get_hourly_weather_data_by_site(self, site_id, parameters=None, timeStart=None, timeEnd=None):
         
         # input check
         conn = self.db_pool.get_conn()
