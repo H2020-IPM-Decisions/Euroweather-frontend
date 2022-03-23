@@ -30,6 +30,10 @@ param_mapping = {
 kelvin_0c = 272.15
 
 def import_data(coms_path, site_id) -> bool:
+    # Check if site exists
+    if controller.get_site(site_id) is None:
+        print("WARNING from import_data: Site %s does not exist. Skipping file" % site_id)
+        return False
     res_file_path = "%s/%s.res" % (coms_path, site_id)
     try:
         res_file = open(res_file_path,"r")
@@ -130,11 +134,11 @@ def import_data(coms_path, site_id) -> bool:
         
         location_weather_data.data = data
         data_imported.locationWeatherData.append(location_weather_data)
-        timeStart = WeatherData.to_epoch_seconds("%s-01-01" % datetime.now().year) # ISO date e.g. 2021-10-22 (Oct 22 2021)
+        timeStart = WeatherData.to_epoch_seconds("%s-01-01" % (datetime.now().year - 1)) # ISO date e.g. 2021-10-22 (Oct 22 2021)
         timeEnd = WeatherData.to_epoch_seconds("%s-12-31" % datetime.now().year)
         data_from_db = controller.get_hourly_weather_data_by_site(site_id, None, timeStart, timeEnd)
         if DEBUG:
-            print(data_from_db.timeStart)
+            print(None if data_from_db is None else data_from_db.timeStart)
             print("IMPORT DATA %s For site id %s, current timeStart = %s" %(coms_path,site_id,
                                                                             None if data_from_db.timeStart is None else "%sZ" % datetime.utcfromtimestamp(data_from_db.timeStart).isoformat()
                                                                             ))
