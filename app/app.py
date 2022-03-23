@@ -20,10 +20,12 @@ from datetime import datetime, timedelta
 from flask import Flask
 from flask import request
 from flask import render_template
+from flask import abort
 
 from controller import Controller
 from custom_errors import NoDataAvailableError
 from models import WeatherData
+from configparser import NoSectionError
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
@@ -37,6 +39,14 @@ tpl_str = "%s-01-01" if datetime.now().year > 2021 else "%s-09-24"
 data_start_time = datetime.fromisoformat(tpl_str % datetime.now().year)
 
 available_parameters = [1001,2001,3001,4012]
+
+@app.before_request
+def check_for_maintenance():
+    try:
+        if "misc" in config and config["misc"].get("is_maintenance_mode", "False") == "True":
+            abort(503)
+    except NoSectionError:
+        pass
 
 @app.route("/")
 def index():
@@ -104,4 +114,8 @@ def post_weather_data(site_id):
         return test.get("message", "Something went wrong!"), test.get("status", 500)
     
     return test.as_dict()
+
+@app.errorhandler(503)
+def maintenance_message(e):
+    return render_template("503.html"), 503
 

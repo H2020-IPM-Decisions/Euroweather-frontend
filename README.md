@@ -141,3 +141,13 @@ The files are named `[site_id].req`
 When the backend runs, it collects all these coordinates and reads through the NetCDF files and returns data by replacing the `[site_id].req` file with a `[site_id].res`  file with json data (that needs to be converted to the IPM Decisions weather data format by this application)
 
 The backend performs all the file syncing
+
+### Maintenance mode
+If you need to inform the users about ongoing maintenance, set this value in europe-seasondata.ini:
+
+```
+[misc]
+is_maintenance_mode = True
+```
+
+All requests will get the 503 when this value is set to True
