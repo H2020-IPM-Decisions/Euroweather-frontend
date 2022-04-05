@@ -32,7 +32,7 @@ import os
 import sys
 import json
 import pytz
-from pickle import NONE
+from pickle import NONE, FALSE
 from math import isnan
 #from imaplib import dat
 
@@ -249,19 +249,50 @@ class Controller:
         if DEBUG:  
             print("Timezone for %s, %s = %s" %(location.x,location.y,tz))
         
+        # Copy hourly instantaneous temps to min and/or max temps for aggregation
+        min_temps = [1003,1013]
+        max_temps = [1004,1014]
+        
+        max_requested = True if parameters is None else len(set(parameters) & set(max_temps)) > 0
+        min_requested = True if parameters is None else len(set(parameters) & set(min_temps)) > 0
+        maxmin_requested = max_requested or min_requested
+
+        # Must ensure raw data is queried in db
+        if maxmin_requested and parameters is not None and 1001 not in parameters:
+            parameters.append(1001) 
+        
         hourly_weather_data_list = self.get_weather_data_from_db(site_id, parameters, timeStart, timeEnd)
-                
+                        
         # Inspect the data
         for weather_data in hourly_weather_data_list:
             time_start = weather_data["epoch_seconds"] if time_start is None else min(time_start, weather_data["epoch_seconds"])
             time_end = weather_data["epoch_seconds"] if time_end is None else max(time_end, weather_data["epoch_seconds"])
             params.add(weather_data["parameter_id"])
+        
         #print("DAYBYSITE2?: %s,%s" % (datetime.fromtimestamp(time_start), datetime.fromtimestamp(time_end)))
+        
+        # Calculating number of rows in data set (before adding in max and min temps)
         params = list(params)
+        rows = int(len(hourly_weather_data_list)/len(params))
+        
+        # When adding in these now, we get the correct number of columns
+        if min_requested:
+            params.append(1003)
+        if max_requested:
+            params.append(1004)
+        
         # We have length and dims now!
-        data = [] if len(hourly_weather_data_list) == 0 else numpy.empty(shape=(int(len(hourly_weather_data_list)/len(params)),len(params)),dtype='object').tolist()
+        data = [] if len(hourly_weather_data_list) == 0 else numpy.empty(shape=(rows,len(params)),dtype='object').tolist()
+        
         for weather_data in hourly_weather_data_list:
             data[int((weather_data["epoch_seconds"] - time_start)/3600)][params.index(weather_data["parameter_id"])] = None if weather_data["val"] is None else float(weather_data["val"])
+            # Copying hourly temps into max/min for aggregation
+            if maxmin_requested and weather_data["parameter_id"] == 1001:
+                if min_requested:
+                    data[int((weather_data["epoch_seconds"] - time_start)/3600)][params.index(1003)] = None if weather_data["val"] is None else float(weather_data["val"])
+                if max_requested:
+                    data[int((weather_data["epoch_seconds"] - time_start)/3600)][params.index(1004)] = None if weather_data["val"] is None else float(weather_data["val"])
+        
         lwd = LocationWeatherData(
             longitude = location.x,
             latitude = location.y,
@@ -276,6 +307,7 @@ class Controller:
             locationWeatherData = [lwd]
             )
         
+        #print(weather_data.as_dict())
         
         daily_weather_data = self.get_daily_weather_data_from_hourly(weather_data, tz)
         

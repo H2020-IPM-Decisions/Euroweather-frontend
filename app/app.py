@@ -39,6 +39,7 @@ tpl_str = "%s-01-01" if datetime.now().year > 2022 else "%s-10-24"
 data_start_time = datetime.fromisoformat(tpl_str % (datetime.now().year -1))
 
 available_parameters = [1001,2001,3001,4012]
+available_daily_parameters = available_parameters + [1003,1013,1004,1014] 
 
 @app.before_request
 def check_for_maintenance():
@@ -92,7 +93,7 @@ def get_weather_data():
     if parameters is not None:
         unavailable_parameters = []
         for p in parameters:
-            if not p in available_parameters:
+            if (interval == 3600 and not p in available_parameters) or (interval == 86400 and not p in available_daily_parameters):
                 unavailable_parameters.append(p)
         if len(unavailable_parameters) > 0:
             return "BAD REQUEST: Parameters %s not served by Euroweather. We provide %s" % (unavailable_parameters,available_parameters), 403
