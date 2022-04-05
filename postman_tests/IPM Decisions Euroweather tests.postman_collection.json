@@ -1,0 +1,414 @@
+{
+	"info": {
+		"_postman_id": "9ad03f5a-8ac4-4c5d-94be-7aa2699a4544",
+		"name": "IPM Decisions Euroweather tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get daily weather data (including max and min temps)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{europe-seasondata_url}}/weather_data?timeStart=2021-10-24&interval=86400&longitude=-2.12296&latitude=52.58547&timeEnd=2022-04-06&parameters=1003,1004,2001",
+					"host": [
+						"{{europe-seasondata_url}}"
+					],
+					"path": [
+						"weather_data"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "59.660468",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "9.781989",
+							"disabled": true
+						},
+						{
+							"key": "timeStart",
+							"value": "2021-10-24"
+						},
+						{
+							"key": "interval",
+							"value": "86400"
+						},
+						{
+							"key": "latitude",
+							"value": "50.0",
+							"disabled": true
+						},
+						{
+							"key": "latitude",
+							"value": "63.415130",
+							"description": "FINLAND",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "26.672119",
+							"description": "FINLAND",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "-2.12296"
+						},
+						{
+							"key": "latitude",
+							"value": "52.58547"
+						},
+						{
+							"key": "timeEnd",
+							"value": "2022-04-06"
+						},
+						{
+							"key": "parameters",
+							"value": "1003,1004,2001"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get daily weather data no params specicied (return all)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{europe-seasondata_url}}/weather_data?timeStart=2021-10-24&interval=86400&longitude=-2.12296&latitude=52.58547&timeEnd=2022-04-06",
+					"host": [
+						"{{europe-seasondata_url}}"
+					],
+					"path": [
+						"weather_data"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "59.660468",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "9.781989",
+							"disabled": true
+						},
+						{
+							"key": "timeStart",
+							"value": "2021-10-24"
+						},
+						{
+							"key": "interval",
+							"value": "86400"
+						},
+						{
+							"key": "latitude",
+							"value": "50.0",
+							"disabled": true
+						},
+						{
+							"key": "latitude",
+							"value": "63.415130",
+							"description": "FINLAND",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "26.672119",
+							"description": "FINLAND",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "-2.12296"
+						},
+						{
+							"key": "latitude",
+							"value": "52.58547"
+						},
+						{
+							"key": "timeEnd",
+							"value": "2022-04-06"
+						},
+						{
+							"key": "parameters",
+							"value": "1003,1004,2001",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get hourly weather data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{europe-seasondata_url}}/weather_data?timeStart=2022-03-24&interval=3600&longitude=-2.12296&latitude=52.58547&timeEnd=2022-04-06",
+					"host": [
+						"{{europe-seasondata_url}}"
+					],
+					"path": [
+						"weather_data"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "59.660468",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "9.781989",
+							"disabled": true
+						},
+						{
+							"key": "timeStart",
+							"value": "2022-03-24"
+						},
+						{
+							"key": "interval",
+							"value": "3600"
+						},
+						{
+							"key": "latitude",
+							"value": "50.0",
+							"disabled": true
+						},
+						{
+							"key": "latitude",
+							"value": "63.415130",
+							"description": "FINLAND",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "26.672119",
+							"description": "FINLAND",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "-2.12296"
+						},
+						{
+							"key": "latitude",
+							"value": "52.58547"
+						},
+						{
+							"key": "timeEnd",
+							"value": "2022-04-06"
+						},
+						{
+							"key": "parameters",
+							"value": "1003,1004,2001",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get hourly weather data only one parameter",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{europe-seasondata_url}}/weather_data?timeStart=2022-03-24&interval=3600&longitude=-2.12296&latitude=52.58547&timeEnd=2022-04-06&parameters=2001",
+					"host": [
+						"{{europe-seasondata_url}}"
+					],
+					"path": [
+						"weather_data"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "59.660468",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "9.781989",
+							"disabled": true
+						},
+						{
+							"key": "timeStart",
+							"value": "2022-03-24"
+						},
+						{
+							"key": "interval",
+							"value": "3600"
+						},
+						{
+							"key": "latitude",
+							"value": "50.0",
+							"disabled": true
+						},
+						{
+							"key": "latitude",
+							"value": "63.415130",
+							"description": "FINLAND",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "26.672119",
+							"description": "FINLAND",
+							"disabled": true
+						},
+						{
+							"key": "longitude",
+							"value": "-2.12296"
+						},
+						{
+							"key": "latitude",
+							"value": "52.58547"
+						},
+						{
+							"key": "timeEnd",
+							"value": "2022-04-06"
+						},
+						{
+							"key": "parameters",
+							"value": "2001"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get weather data by site id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{europe-seasondata_url}}/weather_data/1",
+					"host": [
+						"{{europe-seasondata_url}}"
+					],
+					"path": [
+						"weather_data",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST weather data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"interval\": 3600,\n    \"locationWeatherData\": [\n        {\n            \"QC\": [\n                1,\n                1,\n                1,\n                1\n            ],\n            \"altitude\": null,\n            \"data\": [\n                [\n                    5.881494140625023,\n                    3.899999865097925e-05,\n                    93.70157623291016,\n                    3.078089060307319\n                ],\n                [\n                    6.037866210937523,\n                    7.799999002600089e-05,\n                    92.9177474975586,\n                    3.461009694330261\n                ],\n                [\n                    5.884118652343773,\n                    0.00046099998871795833,\n                    91.22903442382812,\n                    3.6661034209235988\n                ],\n                [\n                    5.948785400390648,\n                    0.0012105624191462994,\n                    88.0383529663086,\n                    3.8103436484761346\n                ],\n                [\n                    6.316857910156273,\n                    0.0,\n                    86.65534973144531,\n                    4.451193728692513\n                ],\n                [\n                    6.884667968750023,\n                    0.0,\n                    83.08287048339844,\n                    5.106171236399595\n                ],\n                [\n                    7.763543701171898,\n                    0.0,\n                    77.58151245117188,\n                    5.984396035578238\n                ],\n                [\n                    8.800134277343773,\n                    0.0,\n                    70.40938568115234,\n                    6.254794913633947\n                ],\n                [\n                    9.623376464843773,\n                    0.0,\n                    62.723201751708984,\n                    6.591780960628937\n                ],\n                [\n                    10.360894775390648,\n                    0.0,\n                    57.04866027832031,\n                    7.44928762627112\n                ],\n                [\n                    10.353234863281273,\n                    0.0,\n                    55.15058135986328,\n                    7.411457790036069\n                ],\n                [\n                    9.983178710937523,\n                    0.0,\n                    60.53807067871094,\n                    6.856130610411494\n                ],\n                [\n                    9.459283447265648,\n                    0.0,\n                    64.13337707519531,\n                    5.988357055741648\n                ],\n                [\n                    8.946771240234398,\n                    0.00018799997633323073,\n                    65.75572204589844,\n                    5.378856251469694\n                ],\n                [\n                    8.533746337890648,\n                    0.01045012497343123,\n                    70.05648040771484,\n                    null\n                ],\n                [\n                    8.442468261718773,\n                    0.002641124650835991,\n                    71.82009887695312,\n                    5.007405328488927\n                ],\n                [\n                    8.374536132812523,\n                    0.02093449980020523,\n                    73.39606475830078,\n                    5.312318866110118\n                ],\n                [\n                    8.395410156250023,\n                    0.03949249908328056,\n                    74.25093078613281,\n                    5.375622203211018\n                ],\n                [\n                    8.330102539062523,\n                    0.13241073489189148,\n                    75.99139404296875,\n                    5.230935677732541\n                ],\n                [\n                    8.192529296875023,\n                    0.11386890709400177,\n                    79.69268798828125,\n                    4.630182404189854\n                ],\n                [\n                    7.988610839843773,\n                    0.0014067590236663818,\n                    82.95606994628906,\n                    4.024247823057352\n                ],\n                [\n                    7.813684082031273,\n                    0.0005463361740112305,\n                    85.63121795654297,\n                    3.554104197505824\n                ],\n                [\n                    7.334313964843773,\n                    0.0,\n                    89.08325958251953,\n                    3.054862014975798\n                ],\n                [\n                    6.974206542968773,\n                    0.0,\n                    90.27825164794922,\n                    2.62064672714459\n                ],\n                [\n                    6.864099121093773,\n                    0.0,\n                    90.9195556640625,\n                    2.329724165834507\n                ],\n                [\n                    6.766198730468773,\n                    0.012734383344650269,\n                    91.92401123046875,\n                    1.6974301801657339\n                ],\n                [\n                    6.682397460937523,\n                    0.0044838786125183105,\n                    92.66853332519531,\n                    1.4552154271420057\n                ],\n                [\n                    6.518518066406273,\n                    0.0003120005130767822,\n                    93.45169067382812,\n                    1.2560255732696677\n                ],\n                [\n                    6.612084960937523,\n                    0.0,\n                    93.80789184570312,\n                    1.3899966759950702\n                ],\n                [\n                    7.771875000000023,\n                    0.0,\n                    87.79823303222656,\n                    2.3837259511629694\n                ],\n                [\n                    8.716668701171898,\n                    null,\n                    79.78591918945312,\n                    2.732104072331129\n                ]\n            ],\n            \"latitude\": \"50.109\",\n            \"longitude\": \"10.961\"\n        }\n    ],\n    \"timeEnd\": \"2021-10-23T09:00:00Z\",\n    \"timeStart\": \"2021-10-22T03:00:00Z\",\n    \"weatherParameters\": [\n        1001,\n        2001,\n        3001,\n        4012\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{europe-seasondata_url}}/weather_data/1",
+					"host": [
+						"{{europe-seasondata_url}}"
+					],
+					"path": [
+						"weather_data",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
