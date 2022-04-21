@@ -74,8 +74,14 @@ def get_weather_data():
     # Test of the past
     time_start_test = datetime.fromtimestamp(timeStart)
     time_end_test = datetime.fromtimestamp(timeEnd)
-    if  time_start_test < data_start_time or time_end_test < data_start_time:
-        return "BAD REQUEST: timeStart (%s) is before dataseries starts (%s)" % (time_start_test.isoformat(), data_start_time.isoformat()), 403
+    
+    # Logic test (start must be before end)
+    if time_start_test >= time_end_test:
+        return "BAD REQUEST: timeStart (%s) is after timeEnd (%s)" % (time_start_test.isoformat(), time_end_test.isoformat()), 403
+    
+    # Entire request period can't be before data series starts
+    if  time_start_test < data_start_time and time_end_test < data_start_time:
+        return "BAD REQUEST: timeStart (%s) and timeEnd (%s) is before dataseries starts (%s)" % (time_start_test.isoformat(), time_end_test.isoformat(), data_start_time.isoformat()), 403
     # Max future is the day after tomorrow
     max_future = datetime.now() + timedelta(days=2)
     if time_start_test > max_future:
