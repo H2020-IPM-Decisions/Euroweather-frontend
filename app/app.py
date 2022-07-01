@@ -66,9 +66,9 @@ def get_weather_data():
     interval = int(request.args.get("interval", 3600))
     # TODO Proper time check
     # TODO !!!! Change back to default January 1st
-    timeStart = WeatherData.to_epoch_seconds(request.args.get("timeStart", (tpl_str % datetime.now().year))) # ISO date e.g. 2021-10-22 (Oct 22 2021)
+    timeStart = WeatherData.to_epoch_seconds(request.args.get("timeStart", (tpl_str % datetime.now().year))[:10]) # ISO date e.g. 2021-10-22 (Oct 22 2021)
     # Assume that the user wants data for that whole day, so set hour to 23
-    timeEnd = WeatherData.to_epoch_seconds("%sT23:00:00" % request.args.get("timeEnd", "%s-12-31" % datetime.now().year))
+    timeEnd = WeatherData.to_epoch_seconds("%sT23:00:00" % request.args.get("timeEnd", "%s-12-31" % datetime.now().year)[:10])
     
     # Is timeStart too far in the future or in the past?
     # Test of the past
