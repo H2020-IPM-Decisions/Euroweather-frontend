@@ -228,7 +228,7 @@ class Controller:
         return weather_data
     
     def get_daily_weather_data_by_site(self, site_id, parameters, timeStart, timeEnd):
-        #print("DAYBYSITE?: %s,%s" % (datetime.fromtimestamp(timeStart), datetime.fromtimestamp(timeEnd)))
+        print("DAYBYSITE?: %s,%s" % (datetime.fromtimestamp(timeStart), datetime.fromtimestamp(timeEnd)))
         # input check
         conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
@@ -273,7 +273,7 @@ class Controller:
         
         # Calculating number of rows in data set (before adding in max and min temps)
         params = list(params)
-        rows = int(len(hourly_weather_data_list)/len(params))
+        rows = int(len(hourly_weather_data_list)/len(params)) if len(params) > 0 else 0
         
         # When adding in these now, we get the correct number of columns
         if min_requested:
