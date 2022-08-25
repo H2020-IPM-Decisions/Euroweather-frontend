@@ -3,6 +3,6 @@ psycopg2-binary>=2.9.3
 postgis>=1.0.4
 shapely>=1.8.0
 pyproj>=3.3.0
-numpy<1.21,>=1.17
+numpy<=1.21.3,>=1.17
 pytz>=2021.3
 timezonefinder[numba]>=5.2.0
