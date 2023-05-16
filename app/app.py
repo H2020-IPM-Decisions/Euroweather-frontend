@@ -35,8 +35,8 @@ config.read(SITE_ROOT + "/europe-seasondata.ini")
 controller = Controller(config)
 
 # TODO: Change this to Jan 1st of "current year"
-tpl_str = "%s-01-01" if datetime.now().year > 2022 else "%s-10-24"
-data_start_time = datetime.fromisoformat(tpl_str % (datetime.now().year -1))
+tpl_str = "%s-08-01" if datetime.now().year > 2023 else "%s-10-24"
+data_start_time = datetime.fromisoformat(tpl_str % (datetime.now().year -2))
 
 available_parameters = [1001,2001,3001,4012]
 available_daily_parameters = available_parameters + [1003,1013,1004,1014] 
