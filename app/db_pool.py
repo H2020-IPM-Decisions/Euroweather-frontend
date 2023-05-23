@@ -8,7 +8,7 @@ class DBPool:
     
     def connect(self):
         try:
-            self.threaded_connection_pool = psycopg2.pool.ThreadedConnectionPool(1,20,
+            self.threaded_connection_pool = psycopg2.pool.ThreadedConnectionPool(1,90,
                 host = self.config["host"],
                 dbname = self.config["dbname"], 
                 port = self.config["port"],
