@@ -61,6 +61,9 @@ And then restart PostgreSQL to make the `CREATE DATABASE` statement run properly
 
 As user postgres or europe_season_adm run the weather_params_init.sql script to populate the `parameter` table.
 
+The app (per 2023-05-23) expects to have at least 90 database connections available to the pool. Configure the number of available
+connections in `postgresql.conf`
+
 ### Installing the app
 Clone the repository, set up the virtualenv and install app dependencies
 
