@@ -93,7 +93,14 @@ class Controller:
         
         insert_tpl = """
         INSERT INTO weather_data (site_id, log_interval, time_measured, parameter_id, val)
-        VALUES(%s,%s,to_timestamp(%s),%s,%s);
+        VALUES(%(site_id)s,%(log_interval)s,to_timestamp(%(time_measured)s),%(parameter_id)s,%(val)s) 
+        ON CONFLICT (site_id, parameter_id, time_measured, log_interval)
+        DO UPDATE SET 
+        val = %(val)s
+        WHERE site_id = %(site_id)s
+        AND log_interval = %(log_interval)s
+        AND parameter_id = %(parameter_id)s
+        AND time_measured = to_timestamp(%(time_measured)s);
         """
         conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
@@ -103,13 +110,13 @@ class Controller:
             for idy, row in enumerate(data):
                 idx = 0
                 for col in row:
-                    cur.execute(insert_tpl,(
-                        site_id,
-                        3600,
-                        weather_data.timeStart + (3600*idy),
-                        weather_data.weatherParameters[idx],
-                        col
-                        )
+                    cur.execute(insert_tpl,({
+                        "site_id": site_id,
+                        "log_interval": 3600,
+                        "time_measured": weather_data.timeStart + (3600*idy),
+                        "parameter_id": weather_data.weatherParameters[idx],
+                        "val": col
+                        })
                     )
                     idx = idx + 1
             if DEBUG:
