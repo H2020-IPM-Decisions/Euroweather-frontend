@@ -107,18 +107,19 @@ class Controller:
             cur.execute("DELETE FROM weather_data WHERE site_id=%s",(site_id,))
             data = weather_data.locationWeatherData[0].data
             #print(data)
-            #if DEBUG:
-            #    print("site_id=%s, time_measured=%s, parameter_id=%s, val=%s" % (
-            #        site_id, 
-            #        weather_data.timeStart + (3600*idy),
-            #        weather_data.weatherParameters[idx],
-            #        col
-            #        )
-            #    )
-            #
+            
             for idy, row in enumerate(data):
                 idx = 0
                 for col in row:
+                    if DEBUG:
+                        print("site_id=%s, time_measured=%s, parameter_id=%s, val=%s" % (
+                            site_id, 
+                            weather_data.timeStart + (3600*idy),
+                            weather_data.weatherParameters[idx],
+                            col
+                            )
+                        )
+                    
                     cur.execute(insert_tpl,({
                         "site_id": site_id,
                         "log_interval": 3600,
