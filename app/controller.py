@@ -59,7 +59,7 @@ location_tolerance_m = 100
 daily_aggregation_minimum_hourly_values = 15
 
 
-DEBUG = False
+DEBUG = True
 
 # Mapping between the specified aggregation type 
 # of the parameter and the corresponding numpy function
@@ -107,6 +107,14 @@ class Controller:
             cur.execute("DELETE FROM weather_data WHERE site_id=%s",(site_id,))
             data = weather_data.locationWeatherData[0].data
             #print(data)
+            if DEBUG:
+                print("site_id=%s, time_measured=%s, parameter_id=%s, val=%s" % (
+                    site_id, 
+                    weather_data.timeStart + (3600*idy),
+                    weather_data.weatherParameters[idx],
+                    col
+                    )
+                )
             for idy, row in enumerate(data):
                 idx = 0
                 for col in row:
