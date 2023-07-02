@@ -97,10 +97,10 @@ class Controller:
         ON CONFLICT (site_id, parameter_id, time_measured, log_interval)
         DO UPDATE SET 
         val = %(val)s
-        WHERE site_id = %(site_id)s
-        AND log_interval = %(log_interval)s
-        AND parameter_id = %(parameter_id)s
-        AND time_measured = to_timestamp(%(time_measured)s);
+        WHERE weather_data.site_id = %(site_id)s
+        AND weather_data.log_interval = %(log_interval)s
+        AND weather_data.parameter_id = %(parameter_id)s
+        AND weather_data.time_measured = to_timestamp(%(time_measured)s);
         """
         conn = self.db_pool.get_conn()
         with conn.cursor(cursor_factory=extras.RealDictCursor) as cur:
