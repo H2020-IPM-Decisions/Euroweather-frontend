@@ -116,7 +116,7 @@ For test and prod deployments, we recommend using Apache as web server and mod_w
 ### Importing data on a regular basis
 
 ```bash
- 30 * * * * source Euroweather-frontend/venv/bin/activate; python3 /home/nibio/  Euroweather-frontend/app/batch/import_data.py
+ 0 1-23/3 * * * source Euroweather-frontend/venv/bin/activate; python3 /home/nibio/  Euroweather-frontend/app/batch/import_data.py
 ```
 
 #### Purpose of the com_*/ folders
