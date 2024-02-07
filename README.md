@@ -1,4 +1,7 @@
-# Euroweather frontend service
+# ~~Euroweather frontend service~~ [DEPRECATED]
+
+**This application is not in active use anymore, the IPM Decisions project has replaced it with the services from [open-meteo.com](https://open-meteo.com/)**
+
 This service provides location based synthetic seasonal weather data for Europe. The service is based on gridded weather forecasts from Deutsche Wetterdienst which are downloaded and stored throughout the season by the [Euroweather backend service](https://github.com/H2020-IPM-Decisions/Euroweather-backend). The data for each location is interpolated from the 7*7km grid. 
 
 When a request for a specific location is made for the first time during a season, the data from January 1st and up til the request date needs to be collected from the from the backend's rather big archive of NetCDF files. Thus, the user will not get the data immediately from the first request. These location initializations take place once or every second hour (depending on the backend server's capacity). After that, the data are cached in this service's database for quick/immediate access, and daily requests to the backend for updates ensure that the database stays up-to-date.
